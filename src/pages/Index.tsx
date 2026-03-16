@@ -5,14 +5,13 @@ import Icon from "@/components/ui/icon";
 type Section = "home" | "about" | "services" | "portfolio" | "blog" | "faq" | "contacts" | "cabinet";
 type CabinetTab = "dashboard" | "orders" | "documents" | "messages" | "rates" | "settings";
 
-// ── Currency rates hook ────────────────────────────────────────────────────
+// ── Currency rates ─────────────────────────────────────────────────────────
 const CURRENCIES = [
-  { code: "USD", name: "Доллар США", flag: "🇺🇸", buyFallback: 95.50, sellFallback: 96.20 },
-  { code: "EUR", name: "Евро", flag: "🇪🇺", buyFallback: 104.25, sellFallback: 105.15 },
-  { code: "CNY", name: "Юань", flag: "🇨🇳", buyFallback: 13.15, sellFallback: 13.35 },
-  { code: "AED", name: "Дирхам ОАЭ", flag: "🇦🇪", buyFallback: 25.98, sellFallback: 26.15 },
+  { code: "USD", name: "Доллар США",  flag: "🇺🇸", buyFallback: 95.50,  sellFallback: 96.20 },
+  { code: "EUR", name: "Евро",        flag: "🇪🇺", buyFallback: 104.25, sellFallback: 105.15 },
+  { code: "CNY", name: "Юань",        flag: "🇨🇳", buyFallback: 13.15,  sellFallback: 13.35 },
+  { code: "AED", name: "Дирхам ОАЭ", flag: "🇦🇪", buyFallback: 25.98,  sellFallback: 26.15 },
 ];
-
 type RateData = { code: string; name: string; flag: string; buy: number; sell: number; change: number };
 
 function useCurrencyRates() {
@@ -22,105 +21,113 @@ function useCurrencyRates() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetch_ = async () => {
+    const load = async () => {
       try {
         const res = await fetch("https://api.exchangerate-api.com/v4/latest/RUB");
         const data = await res.json();
         setRates(CURRENCIES.map(c => {
           const mid = 1 / data.rates[c.code];
           const spread = 0.015;
-          const change = (Math.random() - 0.5) * 0.4;
-          return { code: c.code, name: c.name, flag: c.flag, buy: +(mid * (1 - spread)).toFixed(2), sell: +(mid * (1 + spread)).toFixed(2), change: +change.toFixed(2) };
+          const change = +(( Math.random() - 0.5) * 0.4).toFixed(2);
+          return { code: c.code, name: c.name, flag: c.flag, buy: +(mid*(1-spread)).toFixed(2), sell: +(mid*(1+spread)).toFixed(2), change };
         }));
-      } catch {
-        setRates(CURRENCIES.map(c => ({ code: c.code, name: c.name, flag: c.flag, buy: c.buyFallback, sell: c.sellFallback, change: 0 })));
-      } finally { setLoading(false); }
+      } catch { /* fallback stays */ }
+      finally { setLoading(false); }
     };
-    fetch_();
-    const t = setInterval(fetch_, 300000);
+    load();
+    const t = setInterval(load, 300_000);
     return () => clearInterval(t);
   }, []);
 
   return { rates, loading };
 }
 
-// ── Data ───────────────────────────────────────────────────────────────────
+// ── Static data ────────────────────────────────────────────────────────────
 const SERVICES = [
-  { icon: "Globe", title: "Международные платежи", desc: "Переводы в 50+ стран в любой валюте. Комиссия от 0.5%. Срок исполнения 1–3 рабочих дня. Собственная инфраструктура без санкционных ограничений.", price: "от 0.5%" },
-  { icon: "Shield", title: "Валютное регулирование", desc: "Паспорта сделок, справки о валютных операциях, сопровождение проверок ЦБ РФ. Полное соответствие требованиям 173-ФЗ и инструкции ЦБ 181-И.", price: "по запросу" },
+  { icon: "Globe", title: "Международные платежи", desc: "Переводы в 50+ стран в любой валюте. Комиссия от 0.5%. Срок 1–3 рабочих дня. Собственная инфраструктура без санкционных ограничений.", price: "от 0.5%" },
+  { icon: "Shield", title: "Валютное регулирование", desc: "Паспорта сделок, справки о валютных операциях, сопровождение проверок ЦБ РФ. Полное соответствие 173-ФЗ и инструкции ЦБ 181-И.", price: "по запросу" },
   { icon: "TrendingUp", title: "FX операции", desc: "Конверсия 50+ валютных пар. Фиксация курса на срок до 30 дней. Хеджирование валютных рисков. Спред от 0.3%.", price: "спред от 0.3%" },
   { icon: "Search", title: "Комплаенс и безопасность", desc: "Due Diligence контрагентов, AML-проверки, санкционный скрининг по базам OFAC, EU, UN. Защита от блокировки платежей.", price: "от 5 000 ₽" },
-  { icon: "Bitcoin", title: "Криптовалютные операции", desc: "Легальная конвертация крипты в фиат и обратно. Работа с USDT, BTC, ETH. Полное юридическое оформление операций.", price: "от 1.5%" },
-  { icon: "FileText", title: "Документооборот и ВЭД", desc: "Подготовка внешнеторговых договоров, инвойсов, упаковочных листов. Сопровождение таможенного оформления. Консультации по ВЭД.", price: "от 3 000 ₽" },
+  { icon: "Bitcoin", title: "Криптовалютные операции", desc: "Легальная конвертация крипты в фиат и обратно. Работа с USDT, BTC, ETH. Полное юридическое оформление.", price: "от 1.5%" },
+  { icon: "FileText", title: "Документооборот и ВЭД", desc: "Подготовка внешнеторговых договоров, инвойсов, упаковочных листов. Сопровождение таможенного оформления.", price: "от 3 000 ₽" },
 ];
 
 const ADVANTAGES = [
-  { icon: "Zap", title: "Быстрое исполнение", desc: "1–3 рабочих дня для стандартных переводов, 24/7 для срочных операций" },
+  { icon: "Zap", title: "Быстрое исполнение", desc: "1–3 рабочих дня для стандартных переводов, 24/7 для срочных" },
   { icon: "Lock", title: "Полная безопасность", desc: "ISO 27001, AML/KYC, соответствие 152-ФЗ, санкционный скрининг" },
   { icon: "Globe2", title: "50+ стран и валют", desc: "Собственная инфраструктура: 30+ юр. лиц в банках разных юрисдикций" },
-  { icon: "Percent", title: "Низкие комиссии", desc: "От 0.5% — в 2–3 раза ниже банковских тарифов на международные переводы" },
+  { icon: "Percent", title: "Низкие комиссии", desc: "От 0.5% — в 2–3 раза ниже банковских тарифов" },
 ];
 
 const FAQ_ITEMS = [
-  { q: "В какие страны вы осуществляете платежи?", a: "Мы работаем с 50+ странами: Китай, ОАЭ, Турция, страны ЕС, США, Юго-Восточная Азия, СНГ и другие. Собственная инфраструктура позволяет проводить платежи без санкционных ограничений." },
-  { q: "Какой минимальный размер платежа?", a: "Минимальная сумма перевода — $500 или эквивалент в другой валюте. Для постоянных клиентов с оборотом от $50 000 в месяц действуют специальные условия." },
-  { q: "Как долго проходят платежи?", a: "Стандартный срок — 1–3 рабочих дня. Для срочных операций предусмотрен режим 24/7 с исполнением в тот же день (доп. комиссия 0.3%)." },
-  { q: "Какие документы нужны для проведения платежа?", a: "Стандартный пакет: инвойс, контракт с зарубежным поставщиком, документы о праве подписи. Для новых клиентов — первичная KYC-верификация (занимает 1 рабочий день)." },
-  { q: "Как происходит ценообразование?", a: "Комиссия зависит от направления, суммы и срочности: от 0.5% для крупных регулярных переводов до 4% для единичных срочных операций. Точный расчёт — по запросу." },
-  { q: "Вы работаете с физическими лицами?", a: "Нет, мы работаем только с юридическими лицами и ИП, осуществляющими внешнеэкономическую деятельность." },
+  { q: "В какие страны вы осуществляете платежи?", a: "Мы работаем с 50+ странами: Китай, ОАЭ, Турция, страны ЕС, США, Юго-Восточная Азия, СНГ и другие." },
+  { q: "Какой минимальный размер платежа?", a: "Минимальная сумма — $500 или эквивалент. Для клиентов с оборотом от $50 000/мес — специальные условия." },
+  { q: "Как долго проходят платежи?", a: "Стандарт — 1–3 рабочих дня. Срочный режим — в тот же день (доп. комиссия 0.3%)." },
+  { q: "Какие документы нужны?", a: "Инвойс, контракт с зарубежным поставщиком, документы о праве подписи. Новым клиентам — KYC-верификация (1 рабочий день)." },
+  { q: "Как происходит ценообразование?", a: "Комиссия от 0.5% до 4% в зависимости от направления, суммы и срочности. Точный расчёт — по запросу." },
+  { q: "Вы работаете с физическими лицами?", a: "Нет, только с юридическими лицами и ИП, осуществляющими внешнеэкономическую деятельность." },
 ];
 
 const BLOG_ITEMS = [
-  { date: "12 марта 2026", tag: "Регулирование", title: "Новые требования ЦБ к валютным операциям: что изменилось в 2026 году", excerpt: "Разбираем актуальные изменения в инструкции ЦБ РФ 181-И и их влияние на порядок проведения международных расчётов." },
-  { date: "5 марта 2026", tag: "Китай", title: "Платежи в Китай в 2026: рабочие схемы и подводные камни", excerpt: "Как проводить оплату китайским поставщикам в условиях ужесточения комплаенс-требований со стороны китайских банков." },
-  { date: "20 февраля 2026", tag: "Криптовалюта", title: "USDT для ВЭД: легальные схемы конвертации для бизнеса", excerpt: "Правовой статус крипто-транзакций в рамках ВЭД, актуальные инструменты и риски использования стейблкоинов в расчётах." },
+  { date: "12 марта 2026", tag: "Регулирование", title: "Новые требования ЦБ к валютным операциям в 2026 году", excerpt: "Разбираем изменения в инструкции ЦБ РФ 181-И и их влияние на порядок проведения международных расчётов." },
+  { date: "5 марта 2026", tag: "Китай", title: "Платежи в Китай в 2026: рабочие схемы и подводные камни", excerpt: "Как проводить оплату китайским поставщикам в условиях ужесточения комплаенс-требований." },
+  { date: "20 февраля 2026", tag: "Криптовалюта", title: "USDT для ВЭД: легальные схемы конвертации для бизнеса", excerpt: "Правовой статус крипто-транзакций, актуальные инструменты и риски использования стейблкоинов в расчётах." },
 ];
 
 const ORDERS_DATA = [
-  { id: "PAY-8847", service: "Международный платёж", country: "🇨🇳 Китай", amount: "$12,500", status: "done", date: "05.03.2026", manager: "Козлов В.А." },
-  { id: "PAY-8821", service: "FX операция", country: "🇦🇪 ОАЭ", amount: "AED 45,000", status: "active", date: "14.03.2026", manager: "Лебедева О.С." },
-  { id: "PAY-8796", service: "Комплаенс", country: "🇩🇪 Германия", amount: "€8,200", status: "pending", date: "16.03.2026", manager: "Козлов В.А." },
-  { id: "PAY-8750", service: "Международный платёж", country: "🇹🇷 Турция", amount: "$6,800", status: "done", date: "10.02.2026", manager: "Лебедева О.С." },
+  { id: "PAY-8847", service: "Международный платёж", country: "🇨🇳 Китай",    amount: "$12,500",   status: "done",    date: "05.03.2026", manager: "Козлов В.А." },
+  { id: "PAY-8821", service: "FX операция",          country: "🇦🇪 ОАЭ",      amount: "AED 45,000", status: "active",  date: "14.03.2026", manager: "Лебедева О.С." },
+  { id: "PAY-8796", service: "Комплаенс",            country: "🇩🇪 Германия", amount: "€8,200",    status: "pending", date: "16.03.2026", manager: "Козлов В.А." },
+  { id: "PAY-8750", service: "Международный платёж", country: "🇹🇷 Турция",   amount: "$6,800",    status: "done",    date: "10.02.2026", manager: "Лебедева О.С." },
 ];
 
 const MESSAGES_DATA = [
   { from: "Козлов В.А.", role: "Персональный менеджер", text: "Добрый день! Платёж PAY-8821 в ОАЭ подтверждён банком-корреспондентом. Ожидайте зачисление в течение 24 часов.", time: "Сегодня, 10:42", unread: true },
-  { from: "Служба комплаенс", role: "Compliance", text: "По запросу PAY-8796: для завершения Due Diligence германского контрагента требуется предоставить выписку из торгового реестра (Handelsregister).", time: "Вчера, 16:15", unread: true },
-  { from: "Система", role: "Уведомление", text: "Платёж PAY-8847 в Китай успешно зачислен получателю. Свифт-подтверждение загружено в раздел «Документы».", time: "05.03.2026", unread: false },
+  { from: "Служба комплаенс", role: "Compliance", text: "По запросу PAY-8796: для завершения Due Diligence германского контрагента требуется выписка из торгового реестра (Handelsregister).", time: "Вчера, 16:15", unread: true },
+  { from: "Система", role: "Уведомление", text: "Платёж PAY-8847 в Китай успешно зачислен получателю. SWIFT-подтверждение загружено в раздел «Документы».", time: "05.03.2026", unread: false },
 ];
 
 const DOCS_DATA = [
   { name: "SWIFT-подтверждение PAY-8847", type: "PDF", size: "0.3 МБ", date: "05.03.2026" },
-  { name: "Инвойс — Китай (Supplier Ltd)", type: "PDF", size: "0.8 МБ", date: "03.03.2026" },
-  { name: "Договор-оферта №2025-847", type: "PDF", size: "1.2 МБ", date: "10.01.2026" },
+  { name: "Инвойс — Китай (Supplier Ltd)",  type: "PDF", size: "0.8 МБ", date: "03.03.2026" },
+  { name: "Договор-оферта №2025-847",       type: "PDF", size: "1.2 МБ", date: "10.01.2026" },
   { name: "Due Diligence отчёт — Германия", type: "PDF", size: "2.1 МБ", date: "14.03.2026" },
-  { name: "Акт об оказании услуг февраль 2026", type: "PDF", size: "0.4 МБ", date: "28.02.2026" },
-  { name: "Справка о валютных операциях Q1", type: "XLSX", size: "0.6 МБ", date: "01.03.2026" },
+  { name: "Акт об оказании услуг фев. 2026",type: "PDF", size: "0.4 МБ", date: "28.02.2026" },
+  { name: "Справка о вал. операциях Q1",    type: "XLSX",size: "0.6 МБ", date: "01.03.2026" },
 ];
 
-// ── Component ──────────────────────────────────────────────────────────────
-export default function Index() {
-  const [section, setSection] = useState<Section>("home");
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [loginForm, setLoginForm] = useState({ email: "", password: "" });
-  const [loginError, setLoginError] = useState("");
-  const [cabinetTab, setCabinetTab] = useState<CabinetTab>("dashboard");
-  const [contactForm, setContactForm] = useState({ name: "", company: "", phone: "", email: "", message: "", service: "" });
-  const [contactSent, setContactSent] = useState(false);
-  const [faqOpen, setFaqOpen] = useState<number | null>(null);
-  const [registerMode, setRegisterMode] = useState(false);
-  const [regForm, setRegForm] = useState({ name: "", company: "", inn: "", email: "", phone: "", password: "" });
-  const [regDone, setRegDone] = useState(false);
-  const { rates, loading: ratesLoading } = useCurrencyRates();
+const I = "Inter, system-ui, sans-serif";
 
-  const nav = (s: Section) => { setSection(s); setMobileMenuOpen(false); window.scrollTo({ top: 0, behavior: "smooth" }); };
+function StatusBadge({ status }: { status: string }) {
+  const map: Record<string, { label: string; cls: string }> = {
+    active:  { label: "В процессе", cls: "badge-amber" },
+    done:    { label: "Исполнен",   cls: "badge-green" },
+    pending: { label: "На проверке", cls: "badge-blue" },
+  };
+  const s = map[status] || map.pending;
+  return <span className={s.cls}>{s.label}</span>;
+}
+
+export default function Index() {
+  const [section, setSection]           = useState<Section>("home");
+  const [mobileOpen, setMobileOpen]     = useState(false);
+  const [isLoggedIn, setIsLoggedIn]     = useState(false);
+  const [loginForm, setLoginForm]       = useState({ email: "", password: "" });
+  const [loginError, setLoginError]     = useState("");
+  const [cabinetTab, setCabinetTab]     = useState<CabinetTab>("dashboard");
+  const [contactForm, setContactForm]   = useState({ name: "", company: "", phone: "", email: "", message: "", service: "" });
+  const [contactSent, setContactSent]   = useState(false);
+  const [faqOpen, setFaqOpen]           = useState<number | null>(null);
+  const [registerMode, setRegisterMode] = useState(false);
+  const [regForm, setRegForm]           = useState({ name: "", company: "", inn: "", email: "", phone: "", password: "" });
+  const [regDone, setRegDone]           = useState(false);
+  const { rates, loading: rLoading }    = useCurrencyRates();
+
+  const nav = (s: Section) => { setSection(s); setMobileOpen(false); window.scrollTo({ top: 0, behavior: "smooth" }); };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (loginForm.email === "jobtravel@bk.ru" && loginForm.password === "18081991") {
-      setIsLoggedIn(true); setLoginError(""); setCabinetTab("dashboard");
-    } else if (loginForm.email && loginForm.password.length >= 4) {
+    if ((loginForm.email === "jobtravel@bk.ru" && loginForm.password === "18081991") || (loginForm.email && loginForm.password.length >= 4)) {
       setIsLoggedIn(true); setLoginError(""); setCabinetTab("dashboard");
     } else {
       setLoginError("Неверный email или пароль");
@@ -140,1021 +147,937 @@ export default function Index() {
     { label: "Блог", key: "blog" }, { label: "FAQ", key: "faq" }, { label: "Контакты", key: "contacts" },
   ];
 
-  // Status badge helper
-  const StatusBadge = ({ status }: { status: string }) => {
-    const map: Record<string, { label: string; bg: string; color: string }> = {
-      active: { label: "В процессе", bg: "rgba(200,168,75,0.12)", color: "var(--gold)" },
-      done: { label: "Исполнен", bg: "rgba(72,187,120,0.12)", color: "#2f855a" },
-      pending: { label: "На проверке", bg: "rgba(74,144,217,0.12)", color: "#2b6cb0" },
-    };
-    const s = map[status] || map.pending;
-    return <span className="px-3 py-1 rounded-full text-xs font-semibold" style={{ backgroundColor: s.bg, color: s.color, fontFamily: "Golos Text, sans-serif", whiteSpace: "nowrap" }}>{s.label}</span>;
-  };
-
   return (
-    <div className="min-h-screen" style={{ fontFamily: "'Golos Text', sans-serif" }}>
+    <div className="min-h-screen bg-white" style={{ fontFamily: I }}>
 
-      {/* ── NAVBAR ── */}
-      <header className="fixed top-0 left-0 right-0 z-50" style={{ backgroundColor: "var(--navy)", borderBottom: "1px solid rgba(200,168,75,0.2)" }}>
+      {/* ─── HEADER ─── */}
+      <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, background: "#fff", borderBottom: "1px solid #e5e7eb", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
         {/* Top bar */}
-        <div className="hidden md:block" style={{ backgroundColor: "rgba(0,0,0,0.25)", borderBottom: "1px solid rgba(200,168,75,0.1)" }}>
-          <div className="container mx-auto px-6 py-1.5 flex items-center justify-between">
+        <div style={{ background: "#1e3a8a", padding: "7px 0" }}>
+          <div className="container mx-auto px-6 flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-5">
-              <a href="tel:+74993985002" className="flex items-center gap-1.5" style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.78rem", fontFamily: "Golos Text, sans-serif" }}>
-                <Icon name="Phone" size={11} style={{ color: "var(--gold)" }} />+7 (499) 398-50-02
+              <a href="tel:+74993985002" style={{ color: "rgba(255,255,255,0.85)", fontSize: "0.78rem", fontFamily: I, textDecoration: "none", display: "flex", alignItems: "center", gap: 5 }}>
+                <Icon name="Phone" size={11} style={{ color: "#93c5fd" }} />+7 (499) 398-50-02
               </a>
-              <a href="mailto:info@vedagentservice.ru" className="flex items-center gap-1.5" style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.78rem", fontFamily: "Golos Text, sans-serif" }}>
-                <Icon name="Mail" size={11} style={{ color: "var(--gold)" }} />info@vedagentservice.ru
+              <a href="mailto:info@vedagentservice.ru" style={{ color: "rgba(255,255,255,0.85)", fontSize: "0.78rem", fontFamily: I, textDecoration: "none", display: "flex", alignItems: "center", gap: 5 }} className="hidden sm:flex">
+                <Icon name="Mail" size={11} style={{ color: "#93c5fd" }} />info@vedagentservice.ru
               </a>
             </div>
-            <div className="flex items-center gap-4">
-              {!ratesLoading && rates.slice(0, 3).map(r => (
-                <span key={r.code} style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.6)", fontFamily: "Golos Text, sans-serif" }}>
-                  {r.flag} {r.code} <span style={{ color: "var(--gold)" }}>{r.sell.toFixed(2)}</span>
+            <div className="flex items-center gap-3">
+              {!rLoading && rates.slice(0, 3).map(r => (
+                <span key={r.code} style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.7)", fontFamily: I }}>
+                  {r.flag} <span style={{ color: "#93c5fd", fontWeight: 600 }}>{r.code}</span> {r.sell.toFixed(2)}
                 </span>
               ))}
-              <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)", fontFamily: "Golos Text, sans-serif" }}>Пн–Пт 9:00–18:00</span>
             </div>
           </div>
         </div>
+        {/* Main row */}
         <div className="container mx-auto px-6">
-          <div className="flex items-center justify-between h-15 py-3">
-            <button onClick={() => nav("home")} className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-sm flex items-center justify-center" style={{ backgroundColor: "var(--gold)" }}>
-                <Icon name="Globe" size={18} style={{ color: "var(--navy)" }} />
+          <div className="flex items-center justify-between h-14">
+            <button onClick={() => nav("home")} style={{ display: "flex", alignItems: "center", gap: 10, background: "none", border: "none", cursor: "pointer" }}>
+              <div style={{ width: 36, height: 36, borderRadius: 8, background: "linear-gradient(135deg,#2563eb,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Icon name="Globe" size={18} style={{ color: "#fff" }} />
               </div>
               <div>
-                <div style={{ fontFamily: "Cormorant, serif", fontSize: "1.15rem", fontWeight: 700, color: "white", lineHeight: 1.1 }}>ВЭД Агент</div>
-                <div style={{ fontSize: "0.6rem", color: "var(--gold)", letterSpacing: "0.12em", textTransform: "uppercase" }}>Сервис</div>
+                <div style={{ fontFamily: I, fontSize: "1rem", fontWeight: 800, color: "#111827", lineHeight: 1.1, letterSpacing: "-0.02em" }}>ВЭД Агент</div>
+                <div style={{ fontSize: "0.58rem", color: "#6b7280", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: I }}>Сервис</div>
               </div>
             </button>
 
-            <nav className="hidden lg:flex items-center gap-5">
+            <nav className="hidden lg:flex items-center gap-6">
               {navItems.map(item => (
                 <button key={item.key} onClick={() => nav(item.key)} className={`nav-link ${section === item.key ? "active" : ""}`}>{item.label}</button>
               ))}
             </nav>
 
-            <div className="flex items-center gap-3">
-              <button onClick={() => nav("contacts")} className="hidden md:block btn-primary text-sm py-2 px-4">Консультация</button>
-              <button onClick={() => nav("cabinet")} className="hidden sm:flex items-center gap-2 btn-outline text-sm py-2 px-4">
-                <Icon name="User" size={14} />{isLoggedIn ? "Кабинет" : "Войти"}
+            <div className="flex items-center gap-2">
+              <button onClick={() => nav("contacts")} className="btn-primary hidden sm:flex" style={{ padding: "8px 18px", fontSize: "0.82rem" }}>Консультация</button>
+              <button onClick={() => nav("cabinet")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, border: "1.5px solid #e5e7eb", background: "white", fontFamily: I, fontSize: "0.82rem", fontWeight: 500, color: "#374151", cursor: "pointer" }}>
+                <Icon name="User" size={14} style={{ color: "#6b7280" }} />{isLoggedIn ? "Кабинет" : "Войти"}
               </button>
-              <button className="lg:hidden text-white p-2" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-                <Icon name={mobileMenuOpen ? "X" : "Menu"} size={22} />
+              <button className="lg:hidden p-2" onClick={() => setMobileOpen(!mobileOpen)} style={{ background: "none", border: "none", cursor: "pointer" }}>
+                <Icon name={mobileOpen ? "X" : "Menu"} size={22} style={{ color: "#374151" }} />
               </button>
             </div>
           </div>
         </div>
-        {mobileMenuOpen && (
-          <div style={{ backgroundColor: "var(--navy-light)", borderTop: "1px solid rgba(200,168,75,0.2)" }} className="lg:hidden px-6 py-4">
+        {mobileOpen && (
+          <div style={{ background: "#fff", borderTop: "1px solid #e5e7eb", padding: "16px 24px" }}>
             {navItems.map(item => (
-              <button key={item.key} onClick={() => nav(item.key)} className="block w-full text-left nav-link py-3 border-b border-white/10 last:border-0">{item.label}</button>
+              <button key={item.key} onClick={() => nav(item.key)} style={{ display: "block", width: "100%", textAlign: "left", padding: "12px 0", fontFamily: I, fontSize: "0.9rem", fontWeight: section === item.key ? 600 : 400, color: section === item.key ? "#2563eb" : "#374151", background: "none", border: "none", borderBottom: "1px solid #f3f4f6", cursor: "pointer" }}>{item.label}</button>
             ))}
-            <div className="flex gap-3 mt-4">
-              <button onClick={() => nav("contacts")} className="flex-1 btn-primary text-center text-sm py-2">Консультация</button>
-              <button onClick={() => nav("cabinet")} className="flex-1 btn-outline text-center text-sm py-2">{isLoggedIn ? "Кабинет" : "Войти"}</button>
+            <div className="flex gap-2 mt-4">
+              <button onClick={() => nav("contacts")} className="btn-primary flex-1 justify-center" style={{ padding: "10px 0", fontSize: "0.875rem" }}>Консультация</button>
+              <button onClick={() => nav("cabinet")} className="btn-outline flex-1 justify-center" style={{ padding: "10px 0", fontSize: "0.875rem" }}>{isLoggedIn ? "Кабинет" : "Войти"}</button>
             </div>
           </div>
         )}
       </header>
 
-      <main className="pt-20">
+      <main style={{ paddingTop: 97 }}>
 
-        {/* ════════ HOME ════════ */}
-        {section === "home" && (
-          <>
-            {/* Hero */}
-            <section className="relative overflow-hidden" style={{ minHeight: "90vh", backgroundColor: "var(--navy)" }}>
-              <div className="absolute inset-0 opacity-20" style={{ backgroundImage: `url(https://cdn.poehali.dev/projects/bdb0b596-d990-4173-9987-44d3766a158a/files/32a090cb-9d08-49dc-b3c2-f159b4dbd023.jpg)`, backgroundSize: "cover", backgroundPosition: "center" }} />
-              <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, rgba(15,31,61,0.97) 45%, rgba(15,31,61,0.75) 100%)" }} />
-              {/* Geometric accents */}
-              <div className="absolute top-20 right-10 w-64 h-64 rounded-full opacity-5" style={{ background: "radial-gradient(circle, var(--gold) 0%, transparent 70%)" }} />
-              <div className="absolute bottom-40 right-1/4 w-40 h-40 rounded-full opacity-5" style={{ background: "radial-gradient(circle, var(--gold) 0%, transparent 70%)" }} />
+        {/* ══════ HOME ══════ */}
+        {section === "home" && <>
+          {/* Hero */}
+          <section className="hero-bg" style={{ minHeight: "88vh", display: "flex", flexDirection: "column", justifyContent: "center", position: "relative" }}>
+            <div style={{ position: "absolute", top: -80, right: -80, width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle,rgba(99,102,241,0.35) 0%,transparent 70%)", pointerEvents: "none" }} />
+            <div style={{ position: "absolute", bottom: 40, left: "10%", width: 280, height: 280, borderRadius: "50%", background: "radial-gradient(circle,rgba(59,130,246,0.25) 0%,transparent 70%)", pointerEvents: "none" }} />
+            <div className="container mx-auto px-6 py-20 relative">
+              <div style={{ maxWidth: 680 }} className="animate-slide-up">
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 100, padding: "6px 16px", marginBottom: 28 }}>
+                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#4ade80", boxShadow: "0 0 6px #4ade80" }} />
+                  <span style={{ fontFamily: I, fontSize: "0.78rem", fontWeight: 500, color: "rgba(255,255,255,0.9)", letterSpacing: "0.05em" }}>Профессиональный участник валютного рынка · с 2018 года</span>
+                </div>
+                <h1 style={{ fontFamily: I, fontSize: "clamp(2.4rem,5.5vw,4rem)", fontWeight: 800, color: "#fff", lineHeight: 1.1, letterSpacing: "-0.03em", marginBottom: 24 }}>
+                  Международные<br />платежи{" "}
+                  <span style={{ background: "linear-gradient(90deg,#93c5fd,#a5b4fc)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>без ограничений</span>
+                </h1>
+                <p style={{ fontFamily: I, fontSize: "1.05rem", color: "rgba(255,255,255,0.75)", lineHeight: 1.75, maxWidth: 500, marginBottom: 36 }}>
+                  Оплата инвойсов зарубежным поставщикам, FX‑операции и ВЭД‑сопровождение. 50+ стран, собственная инфраструктура.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <button onClick={() => nav("contacts")} className="btn-white" style={{ padding: "13px 32px", fontSize: "0.9rem" }}>
+                    Получить расчёт <Icon name="ArrowRight" size={16} />
+                  </button>
+                  <button onClick={() => nav("services")} className="btn-white-outline" style={{ padding: "13px 32px", fontSize: "0.9rem" }}>Наши услуги</button>
+                </div>
+                <div className="flex flex-wrap gap-2 mt-8">
+                  {["ISO 27001","AML/KYC","ЦБ РФ 181-И","152-ФЗ"].map(b => (
+                    <span key={b} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 100, padding: "4px 12px", fontFamily: I, fontSize: "0.72rem", fontWeight: 500, color: "rgba(255,255,255,0.7)" }}>
+                      <Icon name="ShieldCheck" size={11} style={{ color: "#93c5fd" }} />{b}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+            {/* Stats bar */}
+            <div style={{ background: "rgba(0,0,0,0.25)", backdropFilter: "blur(8px)", borderTop: "1px solid rgba(255,255,255,0.1)", marginTop: "auto" }}>
+              <div className="container mx-auto px-6">
+                <div className="grid grid-cols-2 md:grid-cols-4" style={{ borderLeft: "none" }}>
+                  {[{n:"50+",l:"стран и валют"},{n:"500k+",l:"операций"},{n:"99.8%",l:"успешность"},{n:"$127M",l:"объём/мес"}].map((s,i) => (
+                    <div key={i} style={{ padding: "20px 16px", textAlign: "center", borderRight: i < 3 ? "1px solid rgba(255,255,255,0.08)" : "none" }}>
+                      <div style={{ fontFamily: I, fontSize: "1.8rem", fontWeight: 800, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1 }}>{s.n}</div>
+                      <div style={{ fontFamily: I, fontSize: "0.72rem", color: "rgba(255,255,255,0.5)", marginTop: 4, textTransform: "uppercase", letterSpacing: "0.07em" }}>{s.l}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
 
-              <div className="relative container mx-auto px-6 flex flex-col justify-center" style={{ minHeight: "90vh" }}>
-                <div className="max-w-2xl animate-slide-up">
-                  <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-sm" style={{ border: "1px solid rgba(200,168,75,0.35)", backgroundColor: "rgba(200,168,75,0.07)" }}>
-                    <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: "var(--gold)" }} />
-                    <span style={{ color: "var(--gold)", fontSize: "0.78rem", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "Golos Text, sans-serif" }}>Профессиональный участник валютного рынка</span>
+          {/* Rates ticker */}
+          <div style={{ background: "#1e40af", padding: "10px 0", borderBottom: "1px solid #1d4ed8" }}>
+            <div className="container mx-auto px-6">
+              <div className="flex flex-wrap items-center gap-2">
+                <span style={{ fontFamily: I, fontSize: "0.72rem", fontWeight: 600, color: "rgba(255,255,255,0.55)", textTransform: "uppercase", letterSpacing: "0.08em", marginRight: 8 }}>Курсы валют:</span>
+                {rLoading ? <span style={{ fontFamily: I, fontSize: "0.8rem", color: "rgba(255,255,255,0.4)" }}>Загрузка...</span> : rates.map(r => (
+                  <div key={r.code} className="rate-pill">
+                    <span>{r.flag}</span>
+                    <span style={{ fontWeight: 600 }}>{r.code}</span>
+                    <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.72rem" }}>покупка</span>
+                    <span style={{ color: "#93c5fd", fontWeight: 600 }}>{r.buy.toFixed(2)}</span>
+                    <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.72rem" }}>продажа</span>
+                    <span style={{ color: "#93c5fd", fontWeight: 600 }}>{r.sell.toFixed(2)}</span>
+                    <span style={{ fontSize: "0.68rem", color: r.change >= 0 ? "#4ade80" : "#f87171" }}>{r.change >= 0 ? "▲" : "▼"}{Math.abs(r.change).toFixed(2)}</span>
                   </div>
-                  <h1 style={{ fontFamily: "Cormorant, serif", fontSize: "clamp(2.8rem, 6vw, 5rem)", fontWeight: 700, color: "white", lineHeight: 1.1, marginBottom: "1.5rem" }}>
-                    Международные<br />платежи<br /><span style={{ color: "var(--gold)" }}>без рисков</span>
-                  </h1>
-                  <p style={{ color: "rgba(255,255,255,0.72)", fontSize: "1.1rem", lineHeight: 1.75, maxWidth: "520px", marginBottom: "2.5rem", fontFamily: "Golos Text, sans-serif" }}>
-                    Оплата инвойсов зарубежным поставщикам, валютные операции и сопровождение ВЭД-сделок. 50+ стран, собственная инфраструктура, без санкционных ограничений.
+                ))}
+                <span style={{ marginLeft: "auto", fontFamily: I, fontSize: "0.68rem", color: "rgba(255,255,255,0.3)" }}>обновление каждые 5 мин</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Services */}
+          <section className="section-padding" style={{ background: "#f9fafb" }}>
+            <div className="container mx-auto px-6">
+              <div style={{ textAlign: "center", marginBottom: 52 }}>
+                <div className="section-label" style={{ justifyContent: "center" }}>Что мы делаем</div>
+                <h2 style={{ fontFamily: I, fontSize: "clamp(1.8rem,3.5vw,2.5rem)", fontWeight: 800, color: "#111827", letterSpacing: "-0.025em" }}>Наши услуги</h2>
+                <p style={{ fontFamily: I, color: "#6b7280", marginTop: 12, maxWidth: 520, margin: "12px auto 0", lineHeight: 1.7 }}>Полный спектр сервисов для безопасных международных расчётов</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {SERVICES.map((s, i) => (
+                  <div key={i} className="card-service">
+                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 18 }}>
+                      <div className="icon-box"><Icon name={s.icon as any} size={22} style={{ color: "#2563eb" }} /></div>
+                      <span className="badge-blue">{s.price}</span>
+                    </div>
+                    <h3 style={{ fontFamily: I, fontSize: "1rem", fontWeight: 700, color: "#111827", marginBottom: 8 }}>{s.title}</h3>
+                    <p style={{ fontFamily: I, color: "#6b7280", fontSize: "0.875rem", lineHeight: 1.65, marginBottom: 16 }}>{s.desc}</p>
+                    <button onClick={() => nav("contacts")} style={{ fontFamily: I, fontSize: "0.83rem", fontWeight: 600, color: "#2563eb", background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, padding: 0 }}>
+                      Узнать подробнее <Icon name="ArrowRight" size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Why us */}
+          <section className="section-padding" style={{ background: "#fff" }}>
+            <div className="container mx-auto px-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                <div>
+                  <div className="section-label">Почему мы</div>
+                  <h2 style={{ fontFamily: I, fontSize: "clamp(1.6rem,3vw,2.2rem)", fontWeight: 800, color: "#111827", letterSpacing: "-0.025em", lineHeight: 1.25, marginTop: 8 }}>
+                    Работаем с зарубежными партнёрами легально и безопасно
+                  </h2>
+                  <p style={{ fontFamily: I, color: "#6b7280", lineHeight: 1.75, marginTop: 18 }}>
+                    Собственная инфраструктура из 30+ юридических лиц в банках разных юрисдикций позволяет проводить платежи туда, куда банки отказывают. С 2018 года, 500k+ операций.
                   </p>
-                  <div className="flex flex-wrap gap-4">
-                    <button onClick={() => nav("contacts")} className="btn-primary">Заказать консультацию</button>
-                    <button onClick={() => nav("services")} className="btn-outline">Наши услуги</button>
-                  </div>
-                  {/* Trust badges */}
-                  <div className="mt-10 flex flex-wrap gap-4">
-                    {["ISO 27001", "AML/KYC", "152-ФЗ", "ЦБ РФ 181-И"].map(b => (
-                      <span key={b} className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm" style={{ border: "1px solid rgba(200,168,75,0.2)", backgroundColor: "rgba(200,168,75,0.05)", fontSize: "0.75rem", color: "rgba(255,255,255,0.6)", fontFamily: "Golos Text, sans-serif" }}>
-                        <Icon name="ShieldCheck" size={11} style={{ color: "var(--gold)" }} />{b}
-                      </span>
+                  <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {ADVANTAGES.map((a, i) => (
+                      <div key={i} style={{ padding: "18px 20px", borderRadius: 10, border: "1px solid #e5e7eb", background: "#fafafa" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                          <div style={{ width: 30, height: 30, borderRadius: 7, background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <Icon name={a.icon as any} size={15} style={{ color: "#2563eb" }} />
+                          </div>
+                          <span style={{ fontFamily: I, fontWeight: 600, color: "#111827", fontSize: "0.875rem" }}>{a.title}</span>
+                        </div>
+                        <p style={{ fontFamily: I, color: "#6b7280", fontSize: "0.82rem", lineHeight: 1.55 }}>{a.desc}</p>
+                      </div>
                     ))}
                   </div>
+                  <button onClick={() => nav("about")} className="btn-outline" style={{ marginTop: 28 }}>О компании</button>
                 </div>
-
-                {/* Stats bar */}
-                <div className="absolute bottom-0 left-0 right-0" style={{ backgroundColor: "rgba(255,255,255,0.04)", backdropFilter: "blur(10px)", borderTop: "1px solid rgba(200,168,75,0.15)" }}>
-                  <div className="container mx-auto px-6">
-                    <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/10">
-                      {[
-                        { n: "50+", l: "стран и валют" },
-                        { n: "500k+", l: "успешных операций" },
-                        { n: "99.8%", l: "успешность платежей" },
-                        { n: "$127M", l: "объём в месяц" },
-                      ].map((s, i) => (
-                        <div key={i} className="px-6 py-5 text-center">
-                          <div className="stat-number">{s.n}</div>
-                          <div style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.78rem", marginTop: "4px", textTransform: "uppercase", letterSpacing: "0.07em", fontFamily: "Golos Text, sans-serif" }}>{s.l}</div>
-                        </div>
-                      ))}
-                    </div>
+                <div style={{ position: "relative" }}>
+                  <img src="https://cdn.poehali.dev/projects/bdb0b596-d990-4173-9987-44d3766a158a/files/f4cd3994-da5c-48a6-aee1-38574ccee131.jpg" alt="Команда" style={{ width: "100%", height: 420, objectFit: "cover", borderRadius: 16 }} />
+                  <div style={{ position: "absolute", bottom: -16, left: -16, padding: "18px 22px", background: "linear-gradient(135deg,#2563eb,#4f46e5)", borderRadius: 12 }}>
+                    <div style={{ fontFamily: I, fontSize: "2rem", fontWeight: 800, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1 }}>2018</div>
+                    <div style={{ fontFamily: I, fontSize: "0.78rem", color: "rgba(255,255,255,0.8)", marginTop: 2, fontWeight: 500 }}>год основания</div>
                   </div>
                 </div>
-              </div>
-            </section>
-
-            {/* Rates widget */}
-            <section style={{ backgroundColor: "var(--navy-light)", borderBottom: "1px solid rgba(200,168,75,0.15)" }}>
-              <div className="container mx-auto px-6 py-4">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span style={{ fontSize: "0.75rem", color: "var(--gold)", textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: "Golos Text, sans-serif", marginRight: "8px" }}>Курсы валют:</span>
-                  {ratesLoading ? (
-                    <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.8rem" }}>Загрузка...</span>
-                  ) : (
-                    rates.map(r => (
-                      <div key={r.code} className="flex items-center gap-2 px-4 py-1.5 rounded-sm" style={{ backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                        <span style={{ fontSize: "0.85rem" }}>{r.flag}</span>
-                        <span style={{ fontFamily: "Golos Text, sans-serif", fontWeight: 600, color: "white", fontSize: "0.82rem" }}>{r.code}</span>
-                        <span style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.5)", fontFamily: "Golos Text, sans-serif" }}>покупка</span>
-                        <span style={{ fontFamily: "Golos Text, sans-serif", color: "var(--gold)", fontSize: "0.82rem" }}>{r.buy.toFixed(2)}</span>
-                        <span style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.5)", fontFamily: "Golos Text, sans-serif" }}>продажа</span>
-                        <span style={{ fontFamily: "Golos Text, sans-serif", color: "var(--gold)", fontSize: "0.82rem" }}>{r.sell.toFixed(2)}</span>
-                        <span style={{ fontSize: "0.72rem", color: r.change >= 0 ? "#48bb78" : "#fc8181", fontFamily: "Golos Text, sans-serif" }}>{r.change >= 0 ? "▲" : "▼"}{Math.abs(r.change).toFixed(2)}</span>
-                      </div>
-                    ))
-                  )}
-                  <span style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.3)", marginLeft: "auto", fontFamily: "Golos Text, sans-serif" }}>обновление каждые 5 мин</span>
-                </div>
-              </div>
-            </section>
-
-            {/* Services */}
-            <section className="section-padding bg-cream">
-              <div className="container mx-auto px-6">
-                <div className="text-center mb-14">
-                  <h2 style={{ fontFamily: "Cormorant, serif", fontSize: "clamp(2rem, 4vw, 3rem)", fontWeight: 700, color: "var(--navy)" }} className="gold-line-center">Наши услуги</h2>
-                  <p style={{ color: "var(--text-mid)", marginTop: "24px", maxWidth: "560px", margin: "24px auto 0", fontFamily: "Golos Text, sans-serif" }}>Полный спектр сервисов для безопасных международных расчётов и ВЭД-сопровождения</p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {SERVICES.map((s, i) => (
-                    <div key={i} className="card-service">
-                      <div className="flex items-start justify-between mb-5">
-                        <div className="w-12 h-12 rounded flex items-center justify-center" style={{ backgroundColor: "rgba(200,168,75,0.1)" }}>
-                          <Icon name={s.icon as any} size={22} style={{ color: "var(--gold)" }} />
-                        </div>
-                        <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ backgroundColor: "var(--navy)", color: "var(--gold)", fontFamily: "Golos Text, sans-serif" }}>{s.price}</span>
-                      </div>
-                      <h3 style={{ fontFamily: "Cormorant, serif", fontSize: "1.25rem", fontWeight: 700, color: "var(--navy)", marginBottom: "10px" }}>{s.title}</h3>
-                      <p style={{ color: "var(--text-mid)", fontSize: "0.88rem", lineHeight: 1.65, fontFamily: "Golos Text, sans-serif", marginBottom: "16px" }}>{s.desc}</p>
-                      <button onClick={() => nav("contacts")} className="text-sm font-semibold flex items-center gap-1 hover-gold" style={{ color: "var(--navy)", fontFamily: "Golos Text, sans-serif" }}>
-                        Узнать подробнее <Icon name="ArrowRight" size={14} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
-
-            {/* Why us */}
-            <section className="section-padding" style={{ backgroundColor: "var(--navy)" }}>
-              <div className="container mx-auto px-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-                  <div>
-                    <h2 style={{ fontFamily: "Cormorant, serif", fontSize: "clamp(1.8rem, 3.5vw, 2.8rem)", fontWeight: 700, color: "white" }} className="gold-line">Работаем с зарубежными партнёрами легально и безопасно</h2>
-                    <p style={{ color: "rgba(255,255,255,0.65)", lineHeight: 1.75, marginTop: "24px", fontFamily: "Golos Text, sans-serif" }}>
-                      Собственная инфраструктура из 30+ юридических лиц в банках разных юрисдикций позволяет нам проводить платежи туда, куда банки отказывают. Работаем с 2018 года, обработано 500k+ операций.
-                    </p>
-                    <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {ADVANTAGES.map((a, i) => (
-                        <div key={i} className="p-4 rounded" style={{ backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(200,168,75,0.12)" }}>
-                          <div className="flex items-center gap-2 mb-2">
-                            <Icon name={a.icon as any} size={16} style={{ color: "var(--gold)" }} />
-                            <span style={{ fontFamily: "Golos Text, sans-serif", fontWeight: 600, color: "white", fontSize: "0.9rem" }}>{a.title}</span>
-                          </div>
-                          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.82rem", lineHeight: 1.5, fontFamily: "Golos Text, sans-serif" }}>{a.desc}</p>
-                        </div>
-                      ))}
-                    </div>
-                    <button onClick={() => nav("about")} className="btn-outline mt-8">О компании</button>
-                  </div>
-                  <div className="relative">
-                    <img src="https://cdn.poehali.dev/projects/bdb0b596-d990-4173-9987-44d3766a158a/files/f4cd3994-da5c-48a6-aee1-38574ccee131.jpg" alt="Команда" className="w-full rounded" style={{ objectFit: "cover", height: "440px" }} />
-                    <div className="absolute -bottom-4 -left-4 p-5 rounded" style={{ backgroundColor: "var(--gold)", maxWidth: "190px" }}>
-                      <div style={{ fontFamily: "Cormorant, serif", fontSize: "2rem", fontWeight: 700, color: "var(--navy)" }}>2018</div>
-                      <div style={{ fontSize: "0.82rem", color: "var(--navy)", fontWeight: 600, fontFamily: "Golos Text, sans-serif" }}>год основания</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* CTA */}
-            <section className="py-20 bg-cream">
-              <div className="container mx-auto px-6 text-center">
-                <h2 style={{ fontFamily: "Cormorant, serif", fontSize: "clamp(1.8rem, 3.5vw, 2.8rem)", fontWeight: 700, color: "var(--navy)" }}>Нужно провести международный платёж?</h2>
-                <p style={{ color: "var(--text-mid)", marginTop: "16px", marginBottom: "32px", fontFamily: "Golos Text, sans-serif" }}>Первичная консультация бесплатно. Расчёт комиссии — в течение 2 часов.</p>
-                <div className="flex flex-wrap gap-4 justify-center">
-                  <button onClick={() => nav("contacts")} className="btn-primary text-base px-10 py-3">Получить расчёт</button>
-                  <a href="https://t.me/+74993985002" target="_blank" rel="noopener noreferrer" className="btn-outline text-base px-10 py-3 flex items-center gap-2">
-                    <Icon name="Send" size={16} />Telegram
-                  </a>
-                </div>
-              </div>
-            </section>
-          </>
-        )}
-
-        {/* ════════ ABOUT ════════ */}
-        {section === "about" && (
-          <div>
-            <div className="py-24" style={{ backgroundColor: "var(--navy)" }}>
-              <div className="container mx-auto px-6">
-                <h1 style={{ fontFamily: "Cormorant, serif", fontSize: "clamp(2.5rem, 5vw, 4rem)", fontWeight: 700, color: "white" }}>О компании</h1>
-                <p style={{ color: "var(--gold)", marginTop: "8px", fontSize: "0.85rem", letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: "Golos Text, sans-serif" }}>ВЭД Агент Сервис — с 2018 года</p>
               </div>
             </div>
-            <div className="section-padding bg-cream">
-              <div className="container mx-auto px-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
-                  <div>
-                    <h2 style={{ fontFamily: "Cormorant, serif", fontSize: "2.2rem", fontWeight: 700, color: "var(--navy)" }} className="gold-line">Кто мы</h2>
-                    <p style={{ color: "var(--text-mid)", lineHeight: 1.8, marginTop: "24px", fontFamily: "Golos Text, sans-serif" }}>
-                      ВЭД Агент Сервис — специализированный провайдер международных платёжных и ВЭД-сервисов для российского бизнеса. Мы работаем с 2018 года и за это время провели более 500 000 платёжных операций на общую сумму свыше $1,5 млрд.
-                    </p>
-                    <p style={{ color: "var(--text-mid)", lineHeight: 1.8, marginTop: "16px", fontFamily: "Golos Text, sans-serif" }}>
-                      Наше ключевое преимущество — собственная инфраструктура: 30+ юридических лиц в банках разных юрисдикций, что позволяет проводить платежи туда, куда крупные банки отказывают из-за санкционных ограничений.
-                    </p>
-                    <p style={{ color: "var(--text-mid)", lineHeight: 1.8, marginTop: "16px", fontFamily: "Golos Text, sans-serif" }}>
-                      Мы работаем исключительно в правовом поле: соответствуем требованиям ЦБ РФ (инструкция 181-И), соблюдаем стандарты AML/KYC, сертифицированы по ISO 27001 в части защиты данных.
-                    </p>
-                    <div className="mt-8 space-y-3">
-                      {["Профессиональный участник валютного рынка", "Соответствие требованиям ЦБ РФ 181-И", "Страхование операций до $10 млн", "Рейтинг надёжности AAA"].map((item, i) => (
-                        <div key={i} className="flex items-start gap-3">
-                          <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ backgroundColor: "rgba(200,168,75,0.15)", border: "1px solid var(--gold)" }}>
-                            <Icon name="Check" size={11} style={{ color: "var(--gold)" }} />
-                          </div>
-                          <span style={{ color: "var(--text-mid)", fontFamily: "Golos Text, sans-serif" }}>{item}</span>
+          </section>
+
+          {/* Process */}
+          <section className="section-padding section-gray">
+            <div className="container mx-auto px-6">
+              <div style={{ textAlign: "center", marginBottom: 48 }}>
+                <div className="section-label" style={{ justifyContent: "center" }}>Как работаем</div>
+                <h2 style={{ fontFamily: I, fontSize: "clamp(1.6rem,3vw,2.2rem)", fontWeight: 800, color: "#111827", letterSpacing: "-0.025em" }}>Четыре шага до платежа</h2>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {[
+                  { n: "01", title: "Заявка", desc: "Оставьте заявку. Ответим за 30 минут." },
+                  { n: "02", title: "KYC-верификация", desc: "Однократная проверка документов. 1 рабочий день." },
+                  { n: "03", title: "Договор", desc: "Согласуем условия, комиссию и сроки." },
+                  { n: "04", title: "Исполнение", desc: "1–3 рабочих дня. SWIFT-подтверждение в кабинете." },
+                ].map((s, i) => (
+                  <div key={i} style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "24px 22px" }}>
+                    <div style={{ fontFamily: I, fontSize: "2.5rem", fontWeight: 800, color: "#dbeafe", letterSpacing: "-0.04em", lineHeight: 1, marginBottom: 10 }}>{s.n}</div>
+                    <h3 style={{ fontFamily: I, fontSize: "0.95rem", fontWeight: 700, color: "#111827", marginBottom: 6 }}>{s.title}</h3>
+                    <p style={{ fontFamily: I, color: "#6b7280", fontSize: "0.85rem", lineHeight: 1.6 }}>{s.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* CTA */}
+          <section className="section-dark" style={{ padding: "72px 0" }}>
+            <div className="container mx-auto px-6 text-center">
+              <h2 style={{ fontFamily: I, fontSize: "clamp(1.6rem,3vw,2.4rem)", fontWeight: 800, color: "#fff", letterSpacing: "-0.025em", marginBottom: 14 }}>Готовы провести международный платёж?</h2>
+              <p style={{ fontFamily: I, color: "rgba(255,255,255,0.65)", marginBottom: 32 }}>Первичная консультация бесплатно. Расчёт комиссии — в течение 2 часов.</p>
+              <div className="flex flex-wrap gap-3 justify-center">
+                <button onClick={() => nav("contacts")} className="btn-white" style={{ padding: "13px 36px", fontSize: "0.95rem" }}>Получить расчёт</button>
+                <a href="https://t.me/+74993985002" target="_blank" rel="noopener noreferrer" className="btn-white-outline" style={{ padding: "13px 28px", fontSize: "0.95rem", textDecoration: "none" }}>
+                  <Icon name="Send" size={16} />Telegram
+                </a>
+              </div>
+            </div>
+          </section>
+        </>}
+
+        {/* ══════ ABOUT ══════ */}
+        {section === "about" && <>
+          <div style={{ background: "linear-gradient(135deg,#1e3a8a,#1e40af)", padding: "72px 0" }}>
+            <div className="container mx-auto px-6">
+              <div className="section-label" style={{ color: "#93c5fd" }}><span style={{ background: "#93c5fd" }} />О компании</div>
+              <h1 style={{ fontFamily: I, fontSize: "clamp(2rem,4vw,3rem)", fontWeight: 800, color: "#fff", letterSpacing: "-0.03em", marginTop: 8 }}>ВЭД Агент Сервис</h1>
+              <p style={{ fontFamily: I, color: "rgba(255,255,255,0.6)", marginTop: 8 }}>Международные платежи и ВЭД-сопровождение с 2018 года</p>
+            </div>
+          </div>
+          <div className="section-padding" style={{ background: "#fff" }}>
+            <div className="container mx-auto px-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+                <div>
+                  <div className="section-label">Кто мы</div>
+                  <h2 style={{ fontFamily: I, fontSize: "1.8rem", fontWeight: 800, color: "#111827", letterSpacing: "-0.025em", lineHeight: 1.25, marginTop: 8 }}>Специализированный провайдер международных платёжных сервисов</h2>
+                  {["ВЭД Агент Сервис работает с 2018 года. Провели более 500 000 операций на сумму свыше $1,5 млрд. Специализируемся на международных платёжных и ВЭД-сервисах для российского бизнеса.",
+                    "Ключевое преимущество — собственная инфраструктура: 30+ юридических лиц в банках разных юрисдикций. Проводим платежи туда, куда крупные банки отказывают из-за санкций.",
+                    "Работаем в правовом поле: соответствуем требованиям ЦБ РФ, соблюдаем стандарты AML/KYC, сертифицированы по ISO 27001."
+                  ].map((t, i) => <p key={i} style={{ fontFamily: I, color: "#4b5563", lineHeight: 1.75, marginTop: 16 }}>{t}</p>)}
+                  <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 10 }}>
+                    {["Профессиональный участник валютного рынка","Соответствие требованиям ЦБ РФ 181-И","Страхование операций до $10 млн","Рейтинг надёжности AAA"].map((item, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                        <div style={{ width: 20, height: 20, borderRadius: "50%", background: "#eff6ff", border: "1.5px solid #3b82f6", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2 }}>
+                          <Icon name="Check" size={11} style={{ color: "#2563eb" }} />
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <img src="https://cdn.poehali.dev/projects/bdb0b596-d990-4173-9987-44d3766a158a/files/d16a817d-c941-448a-8da7-9acc2b9dfd77.jpg" alt="О компании" className="w-full rounded" style={{ height: "360px", objectFit: "cover" }} />
-                    <div className="mt-6 p-5 rounded" style={{ backgroundColor: "var(--navy)", border: "1px solid rgba(200,168,75,0.2)" }}>
-                      <p style={{ fontFamily: "Cormorant, serif", fontSize: "1.1rem", color: "rgba(255,255,255,0.85)", lineHeight: 1.6, fontStyle: "italic" }}>«Наша миссия — помочь российскому бизнесу работать с зарубежными партнёрами легально, безопасно и без лишних сложностей»</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6">
-                  {[
-                    { n: "2018", l: "год основания" },
-                    { n: "500k+", l: "операций" },
-                    { n: "50+", l: "стран" },
-                    { n: "30+", l: "банков-партнёров" },
-                  ].map((s, i) => (
-                    <div key={i} className="text-center p-8 rounded" style={{ backgroundColor: "white", border: "1px solid #e8ecf3" }}>
-                      <div className="stat-number">{s.n}</div>
-                      <div style={{ color: "var(--text-mid)", fontSize: "0.85rem", marginTop: "8px", textTransform: "uppercase", letterSpacing: "0.06em", fontFamily: "Golos Text, sans-serif" }}>{s.l}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Реквизиты */}
-                <div className="mt-16 bg-white rounded p-8" style={{ border: "1px solid #e8ecf3" }}>
-                  <h2 style={{ fontFamily: "Cormorant, serif", fontSize: "1.6rem", fontWeight: 700, color: "var(--navy)", marginBottom: "20px" }} className="gold-line">Реквизиты компании</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-                    {[
-                      { label: "Полное наименование", val: "ООО «ВЭД Агент Сервис»" },
-                      { label: "Юридический адрес", val: "123112, г. Москва, Пресненская наб., 12" },
-                      { label: "ИНН", val: "7714123456" },
-                      { label: "ОГРН", val: "1187746123456" },
-                      { label: "КПП", val: "771401001" },
-                      { label: "Расчётный счёт", val: "40702810XXXX0000XXXX" },
-                    ].map((r, i) => (
-                      <div key={i} className="flex gap-3 py-3" style={{ borderBottom: "1px solid #f0f4f8" }}>
-                        <span style={{ color: "var(--text-light)", fontSize: "0.82rem", minWidth: "160px", fontFamily: "Golos Text, sans-serif" }}>{r.label}</span>
-                        <span style={{ color: "var(--navy)", fontWeight: 500, fontSize: "0.88rem", fontFamily: "Golos Text, sans-serif" }}>{r.val}</span>
+                        <span style={{ fontFamily: I, color: "#374151", fontSize: "0.9rem" }}>{item}</span>
                       </div>
                     ))}
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ════════ SERVICES ════════ */}
-        {section === "services" && (
-          <div>
-            <div className="py-24" style={{ backgroundColor: "var(--navy)" }}>
-              <div className="container mx-auto px-6">
-                <h1 style={{ fontFamily: "Cormorant, serif", fontSize: "clamp(2.5rem, 5vw, 4rem)", fontWeight: 700, color: "white" }}>Услуги</h1>
-                <p style={{ color: "var(--gold)", marginTop: "8px", fontSize: "0.85rem", letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: "Golos Text, sans-serif" }}>Международные платежи и ВЭД-сопровождение</p>
-              </div>
-            </div>
-            <div className="section-padding bg-cream">
-              <div className="container mx-auto px-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-                  {SERVICES.map((s, i) => (
-                    <div key={i} className="card-service">
-                      <div className="flex items-start justify-between mb-5">
-                        <div className="w-12 h-12 rounded flex items-center justify-center" style={{ backgroundColor: "rgba(200,168,75,0.1)" }}>
-                          <Icon name={s.icon as any} size={22} style={{ color: "var(--gold)" }} />
-                        </div>
-                        <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ backgroundColor: "var(--navy)", color: "var(--gold)", fontFamily: "Golos Text, sans-serif" }}>{s.price}</span>
-                      </div>
-                      <h3 style={{ fontFamily: "Cormorant, serif", fontSize: "1.25rem", fontWeight: 700, color: "var(--navy)", marginBottom: "10px" }}>{s.title}</h3>
-                      <p style={{ color: "var(--text-mid)", fontSize: "0.88rem", lineHeight: 1.65, fontFamily: "Golos Text, sans-serif", marginBottom: "16px" }}>{s.desc}</p>
-                      <button onClick={() => nav("contacts")} className="text-sm font-semibold flex items-center gap-1 hover-gold" style={{ color: "var(--navy)", fontFamily: "Golos Text, sans-serif" }}>
-                        Запросить расчёт <Icon name="ArrowRight" size={14} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Process */}
-                <div className="mb-16">
-                  <h2 style={{ fontFamily: "Cormorant, serif", fontSize: "2rem", fontWeight: 700, color: "var(--navy)", marginBottom: "12px" }} className="gold-line">Как мы работаем</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-10">
-                    {[
-                      { n: "01", title: "Заявка", desc: "Оставьте заявку или напишите в мессенджер. Ответим в течение 30 минут." },
-                      { n: "02", title: "KYC-верификация", desc: "Однократная проверка документов компании. Занимает 1 рабочий день." },
-                      { n: "03", title: "Условия и договор", desc: "Согласуем условия, комиссию и сроки. Подписываем договор." },
-                      { n: "04", title: "Исполнение", desc: "Проводим платёж. 1–3 рабочих дня. Предоставляем SWIFT-подтверждение." },
-                    ].map((s, i) => (
-                      <div key={i} className="relative p-6 rounded bg-white" style={{ border: "1px solid #e8ecf3" }}>
-                        <div style={{ fontFamily: "Cormorant, serif", fontSize: "3rem", fontWeight: 700, color: "rgba(200,168,75,0.2)", lineHeight: 1, marginBottom: "8px" }}>{s.n}</div>
-                        <h3 style={{ fontFamily: "Cormorant, serif", fontSize: "1.2rem", fontWeight: 700, color: "var(--navy)", marginBottom: "8px" }}>{s.title}</h3>
-                        <p style={{ color: "var(--text-mid)", fontSize: "0.85rem", lineHeight: 1.6, fontFamily: "Golos Text, sans-serif" }}>{s.desc}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="rounded p-10 text-center" style={{ backgroundColor: "var(--navy)" }}>
-                  <h2 style={{ fontFamily: "Cormorant, serif", fontSize: "2rem", fontWeight: 700, color: "white", marginBottom: "12px" }}>Готовы начать?</h2>
-                  <p style={{ color: "rgba(255,255,255,0.65)", marginBottom: "28px", fontFamily: "Golos Text, sans-serif" }}>Получите расчёт комиссии и сроков для вашего платежа в течение 2 часов</p>
-                  <button onClick={() => nav("contacts")} className="btn-primary">Получить расчёт бесплатно</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ════════ PORTFOLIO ════════ */}
-        {section === "portfolio" && (
-          <div>
-            <div className="py-24" style={{ backgroundColor: "var(--navy)" }}>
-              <div className="container mx-auto px-6">
-                <h1 style={{ fontFamily: "Cormorant, serif", fontSize: "clamp(2.5rem, 5vw, 4rem)", fontWeight: 700, color: "white" }}>Кейсы</h1>
-                <p style={{ color: "var(--gold)", marginTop: "8px", fontSize: "0.85rem", letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: "Golos Text, sans-serif" }}>Реализованные проекты</p>
-              </div>
-            </div>
-            <div className="section-padding bg-cream">
-              <div className="container mx-auto px-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {[
-                    { title: "Регулярные платежи в Китай", tag: "🇨🇳 Китай", volume: "$2.5M/мес", result: "Настроен поток платежей 40+ поставщикам", industry: "Импорт товаров" },
-                    { title: "Выход на рынок ОАЭ", tag: "🇦🇪 ОАЭ", volume: "AED 5M разово", result: "Открытие счёта + первые транзакции за 5 дней", industry: "Недвижимость" },
-                    { title: "Платежи в Турцию в обход санкций", tag: "🇹🇷 Турция", volume: "€800k/мес", result: "0 отклонённых платежей за 8 месяцев", industry: "Текстиль" },
-                    { title: "Комплаенс для немецкого поставщика", tag: "🇩🇪 Германия", volume: "€1.2M разово", result: "Due Diligence пройден за 3 рабочих дня", industry: "Машиностроение" },
-                    { title: "FX хеджирование для IT-компании", tag: "🌍 Multi", volume: "$500k/мес", result: "Зафиксирован курс на 30 дней, экономия 4%", industry: "IT" },
-                    { title: "Крипто-конвертация для ВЭД", tag: "₿ Крипто", volume: "USDT 300k", result: "Легальная конвертация с полным пакетом документов", industry: "E-commerce" },
-                  ].map((p, i) => (
-                    <div key={i} className="bg-white rounded overflow-hidden" style={{ border: "1px solid #e8ecf3", transition: "all 0.3s" }}>
-                      <div className="h-2" style={{ backgroundColor: "var(--gold)" }} />
-                      <div className="p-7">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-semibold px-3 py-1 rounded-full" style={{ backgroundColor: "rgba(200,168,75,0.1)", color: "var(--gold)", fontFamily: "Golos Text, sans-serif" }}>{p.tag}</span>
-                          <span style={{ color: "var(--text-light)", fontSize: "0.78rem", fontFamily: "Golos Text, sans-serif" }}>{p.industry}</span>
-                        </div>
-                        <h3 style={{ fontFamily: "Cormorant, serif", fontSize: "1.2rem", fontWeight: 700, color: "var(--navy)", margin: "10px 0 8px" }}>{p.title}</h3>
-                        <div className="flex items-center gap-2 mb-3">
-                          <Icon name="DollarSign" size={13} style={{ color: "var(--gold)" }} />
-                          <span style={{ color: "var(--text-mid)", fontSize: "0.82rem", fontFamily: "Golos Text, sans-serif" }}>Объём: {p.volume}</span>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <Icon name="CheckCircle" size={13} style={{ color: "#48bb78", marginTop: "2px", flexShrink: 0 }} />
-                          <span style={{ color: "var(--text-mid)", fontSize: "0.85rem", fontFamily: "Golos Text, sans-serif" }}>{p.result}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-12 text-center">
-                  <button onClick={() => nav("contacts")} className="btn-primary">Обсудить ваш платёж</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ════════ BLOG ════════ */}
-        {section === "blog" && (
-          <div>
-            <div className="py-24" style={{ backgroundColor: "var(--navy)" }}>
-              <div className="container mx-auto px-6">
-                <h1 style={{ fontFamily: "Cormorant, serif", fontSize: "clamp(2.5rem, 5vw, 4rem)", fontWeight: 700, color: "white" }}>Блог</h1>
-                <p style={{ color: "var(--gold)", marginTop: "8px", fontSize: "0.85rem", letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: "Golos Text, sans-serif" }}>Экспертные материалы по ВЭД</p>
-              </div>
-            </div>
-            <div className="section-padding bg-cream">
-              <div className="container mx-auto px-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  {BLOG_ITEMS.map((b, i) => (
-                    <div key={i} className="bg-white rounded overflow-hidden cursor-pointer" style={{ border: "1px solid #e8ecf3", transition: "all 0.3s" }} onMouseEnter={e => (e.currentTarget.style.boxShadow = "0 12px 40px rgba(15,31,61,0.1)")} onMouseLeave={e => (e.currentTarget.style.boxShadow = "none")}>
-                      <div className="p-7">
-                        <div className="flex items-center gap-3 mb-4">
-                          <span className="text-xs font-semibold px-3 py-1 rounded-full" style={{ backgroundColor: "rgba(200,168,75,0.1)", color: "var(--gold)", fontFamily: "Golos Text, sans-serif" }}>{b.tag}</span>
-                          <span style={{ color: "var(--text-light)", fontSize: "0.78rem", fontFamily: "Golos Text, sans-serif" }}>{b.date}</span>
-                        </div>
-                        <h3 style={{ fontFamily: "Cormorant, serif", fontSize: "1.25rem", fontWeight: 700, color: "var(--navy)", lineHeight: 1.3, marginBottom: "12px" }}>{b.title}</h3>
-                        <p style={{ color: "var(--text-mid)", fontSize: "0.88rem", lineHeight: 1.65, fontFamily: "Golos Text, sans-serif" }}>{b.excerpt}</p>
-                        <div className="mt-5 flex items-center gap-1 text-sm font-semibold" style={{ color: "var(--gold)", fontFamily: "Golos Text, sans-serif" }}>
-                          Читать далее <Icon name="ArrowRight" size={14} />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ════════ FAQ ════════ */}
-        {section === "faq" && (
-          <div>
-            <div className="py-24" style={{ backgroundColor: "var(--navy)" }}>
-              <div className="container mx-auto px-6">
-                <h1 style={{ fontFamily: "Cormorant, serif", fontSize: "clamp(2.5rem, 5vw, 4rem)", fontWeight: 700, color: "white" }}>Вопросы и ответы</h1>
-                <p style={{ color: "var(--gold)", marginTop: "8px", fontSize: "0.85rem", letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: "Golos Text, sans-serif" }}>Часто задаваемые вопросы</p>
-              </div>
-            </div>
-            <div className="section-padding bg-cream">
-              <div className="container mx-auto px-6 max-w-3xl">
-                <div className="space-y-3">
-                  {FAQ_ITEMS.map((item, i) => (
-                    <div key={i} className="bg-white rounded overflow-hidden" style={{ border: "1px solid #e8ecf3" }}>
-                      <button className="w-full text-left px-7 py-5 flex items-center justify-between gap-4" onClick={() => setFaqOpen(faqOpen === i ? null : i)}>
-                        <span style={{ fontFamily: "Golos Text, sans-serif", fontWeight: 600, color: "var(--navy)", fontSize: "1rem" }}>{item.q}</span>
-                        <Icon name={faqOpen === i ? "ChevronUp" : "ChevronDown"} size={18} style={{ color: "var(--gold)", flexShrink: 0 }} />
-                      </button>
-                      {faqOpen === i && (
-                        <div className="px-7 pb-6 animate-fade-in">
-                          <div style={{ height: "1px", backgroundColor: "#e8ecf3", marginBottom: "16px" }} />
-                          <p style={{ color: "var(--text-mid)", lineHeight: 1.75, fontFamily: "Golos Text, sans-serif" }}>{item.a}</p>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-10 p-8 rounded text-center" style={{ backgroundColor: "var(--navy)" }}>
-                  <p style={{ color: "rgba(255,255,255,0.8)", marginBottom: "16px", fontFamily: "Golos Text, sans-serif" }}>Остались вопросы? Проконсультируем бесплатно</p>
-                  <div className="flex flex-wrap gap-3 justify-center">
-                    <button onClick={() => nav("contacts")} className="btn-primary">Задать вопрос</button>
-                    <a href="https://wa.me/74993985002" target="_blank" rel="noopener noreferrer" className="btn-outline flex items-center gap-2">
-                      <Icon name="MessageCircle" size={15} />WhatsApp
-                    </a>
+                <div>
+                  <img src="https://cdn.poehali.dev/projects/bdb0b596-d990-4173-9987-44d3766a158a/files/d16a817d-c941-448a-8da7-9acc2b9dfd77.jpg" alt="О компании" style={{ width: "100%", height: 340, objectFit: "cover", borderRadius: 16 }} />
+                  <div style={{ marginTop: 20, padding: "20px 24px", borderRadius: 12, background: "#eff6ff", border: "1px solid #bfdbfe" }}>
+                    <p style={{ fontFamily: I, fontSize: "0.95rem", color: "#1e40af", lineHeight: 1.65, fontStyle: "italic", fontWeight: 500 }}>«Наша миссия — помочь российскому бизнесу работать с зарубежными партнёрами легально, безопасно и без лишних сложностей»</p>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* ════════ CONTACTS ════════ */}
-        {section === "contacts" && (
-          <div>
-            <div className="py-24" style={{ backgroundColor: "var(--navy)" }}>
-              <div className="container mx-auto px-6">
-                <h1 style={{ fontFamily: "Cormorant, serif", fontSize: "clamp(2.5rem, 5vw, 4rem)", fontWeight: 700, color: "white" }}>Контакты</h1>
-                <p style={{ color: "var(--gold)", marginTop: "8px", fontSize: "0.85rem", letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: "Golos Text, sans-serif" }}>Свяжитесь с нами</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mt-16">
+                {[{n:"2018",l:"год основания"},{n:"500k+",l:"операций"},{n:"50+",l:"стран"},{n:"30+",l:"банков-партнёров"}].map((s, i) => (
+                  <div key={i} className="card-stat" style={{ textAlign: "center" }}>
+                    <div className="stat-number">{s.n}</div>
+                    <div style={{ fontFamily: I, color: "#6b7280", fontSize: "0.8rem", marginTop: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>{s.l}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ background: "#f9fafb", borderRadius: 12, padding: "32px 28px", marginTop: 32, border: "1px solid #e5e7eb" }}>
+                <h2 style={{ fontFamily: I, fontSize: "1.2rem", fontWeight: 700, color: "#111827", marginBottom: 20 }}>Реквизиты компании</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+                  {[["Полное наименование","ООО «ВЭД Агент Сервис»"],["Юридический адрес","123112, г. Москва, Пресненская наб., 12"],["ИНН","7714123456"],["ОГРН","1187746123456"],["КПП","771401001"],["Расчётный счёт","40702810XXXX0000XXXX"]].map(([label, val], i) => (
+                    <div key={i} style={{ display: "flex", gap: 12, paddingBottom: 12, borderBottom: "1px solid #e5e7eb", marginBottom: 12 }}>
+                      <span style={{ fontFamily: I, color: "#9ca3af", fontSize: "0.82rem", minWidth: 150, flexShrink: 0 }}>{label}</span>
+                      <span style={{ fontFamily: I, color: "#111827", fontWeight: 500, fontSize: "0.875rem" }}>{val}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-            <div className="section-padding bg-cream">
-              <div className="container mx-auto px-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                  <div className="bg-white rounded p-8" style={{ border: "1px solid #e8ecf3" }}>
-                    <h2 style={{ fontFamily: "Cormorant, serif", fontSize: "1.8rem", fontWeight: 700, color: "var(--navy)", marginBottom: "8px" }}>Оставить заявку</h2>
-                    <p style={{ color: "var(--text-mid)", marginBottom: "28px", fontFamily: "Golos Text, sans-serif", fontSize: "0.92rem" }}>Ответим в течение 30 минут в рабочее время</p>
-                    {contactSent ? (
-                      <div className="text-center py-10">
-                        <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: "rgba(200,168,75,0.15)" }}>
-                          <Icon name="CheckCircle" size={32} style={{ color: "var(--gold)" }} />
-                        </div>
-                        <h3 style={{ fontFamily: "Cormorant, serif", fontSize: "1.5rem", fontWeight: 700, color: "var(--navy)" }}>Заявка принята!</h3>
-                        <p style={{ color: "var(--text-mid)", marginTop: "8px", fontFamily: "Golos Text, sans-serif" }}>Наш менеджер свяжется с вами в ближайшее время.</p>
-                        <button className="btn-primary mt-6" onClick={() => setContactSent(false)}>Отправить ещё</button>
+          </div>
+        </>}
+
+        {/* ══════ SERVICES ══════ */}
+        {section === "services" && <>
+          <div style={{ background: "linear-gradient(135deg,#1e3a8a,#1e40af)", padding: "72px 0" }}>
+            <div className="container mx-auto px-6">
+              <div className="section-label" style={{ color: "#93c5fd" }}><span style={{ background: "#93c5fd" }} />Что мы предлагаем</div>
+              <h1 style={{ fontFamily: I, fontSize: "clamp(2rem,4vw,3rem)", fontWeight: 800, color: "#fff", letterSpacing: "-0.03em", marginTop: 8 }}>Услуги</h1>
+            </div>
+          </div>
+          <div className="section-padding section-gray">
+            <div className="container mx-auto px-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-16">
+                {SERVICES.map((s, i) => (
+                  <div key={i} className="card-service" style={{ background: "#fff" }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 18 }}>
+                      <div className="icon-box"><Icon name={s.icon as any} size={22} style={{ color: "#2563eb" }} /></div>
+                      <span className="badge-blue">{s.price}</span>
+                    </div>
+                    <h3 style={{ fontFamily: I, fontSize: "1rem", fontWeight: 700, color: "#111827", marginBottom: 8 }}>{s.title}</h3>
+                    <p style={{ fontFamily: I, color: "#6b7280", fontSize: "0.875rem", lineHeight: 1.65, marginBottom: 16 }}>{s.desc}</p>
+                    <button onClick={() => nav("contacts")} style={{ fontFamily: I, fontSize: "0.83rem", fontWeight: 600, color: "#2563eb", background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, padding: 0 }}>
+                      Запросить расчёт <Icon name="ArrowRight" size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div style={{ background: "linear-gradient(135deg,#1e3a8a,#1e40af)", borderRadius: 16, padding: "48px 40px", textAlign: "center" }}>
+                <h2 style={{ fontFamily: I, fontSize: "1.8rem", fontWeight: 800, color: "#fff", letterSpacing: "-0.02em", marginBottom: 12 }}>Готовы начать?</h2>
+                <p style={{ fontFamily: I, color: "rgba(255,255,255,0.65)", marginBottom: 28 }}>Расчёт комиссии и сроков — в течение 2 часов</p>
+                <button onClick={() => nav("contacts")} className="btn-white" style={{ padding: "12px 32px" }}>Получить расчёт бесплатно</button>
+              </div>
+            </div>
+          </div>
+        </>}
+
+        {/* ══════ PORTFOLIO ══════ */}
+        {section === "portfolio" && <>
+          <div style={{ background: "linear-gradient(135deg,#1e3a8a,#1e40af)", padding: "72px 0" }}>
+            <div className="container mx-auto px-6">
+              <div className="section-label" style={{ color: "#93c5fd" }}><span style={{ background: "#93c5fd" }} />Опыт</div>
+              <h1 style={{ fontFamily: I, fontSize: "clamp(2rem,4vw,3rem)", fontWeight: 800, color: "#fff", letterSpacing: "-0.03em", marginTop: 8 }}>Кейсы</h1>
+            </div>
+          </div>
+          <div className="section-padding section-gray">
+            <div className="container mx-auto px-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {[
+                  { title: "Регулярные платежи в Китай", tag: "🇨🇳 Китай",    volume: "$2.5M/мес",     result: "Поток платежей 40+ поставщикам без отказов", industry: "Импорт товаров" },
+                  { title: "Выход на рынок ОАЭ",         tag: "🇦🇪 ОАЭ",      volume: "AED 5M разово", result: "Первые транзакции за 5 дней", industry: "Недвижимость" },
+                  { title: "Платежи в Турцию",           tag: "🇹🇷 Турция",   volume: "€800k/мес",     result: "0 отклонённых платежей за 8 месяцев", industry: "Текстиль" },
+                  { title: "Комплаенс — Германия",       tag: "🇩🇪 Германия", volume: "€1.2M разово",  result: "Due Diligence за 3 рабочих дня", industry: "Машиностроение" },
+                  { title: "FX хеджирование для IT",     tag: "🌍 Multi",     volume: "$500k/мес",     result: "Зафиксирован курс на 30 дней, экономия 4%", industry: "IT" },
+                  { title: "Крипто-конвертация ВЭД",    tag: "₿ Крипто",     volume: "USDT 300k",     result: "Легальная конвертация с полным пакетом", industry: "E-commerce" },
+                ].map((p, i) => (
+                  <div key={i} style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+                    <div style={{ height: 4, background: "linear-gradient(90deg,#2563eb,#4f46e5)" }} />
+                    <div style={{ padding: "22px 22px 24px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                        <span className="badge-blue">{p.tag}</span>
+                        <span style={{ fontFamily: I, fontSize: "0.75rem", color: "#9ca3af" }}>{p.industry}</span>
                       </div>
-                    ) : (
-                      <form onSubmit={handleContact} className="space-y-4">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-dark)", fontFamily: "Golos Text, sans-serif" }}>Имя *</label>
-                            <input required value={contactForm.name} onChange={e => setContactForm({ ...contactForm, name: e.target.value })} className="w-full px-4 py-3 rounded text-sm outline-none" style={{ border: "1.5px solid #e0e6f0", fontFamily: "Golos Text, sans-serif", color: "var(--navy)" }} onFocus={e => (e.target.style.borderColor = "var(--gold)")} onBlur={e => (e.target.style.borderColor = "#e0e6f0")} placeholder="Александр" />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-dark)", fontFamily: "Golos Text, sans-serif" }}>Компания</label>
-                            <input value={contactForm.company} onChange={e => setContactForm({ ...contactForm, company: e.target.value })} className="w-full px-4 py-3 rounded text-sm outline-none" style={{ border: "1.5px solid #e0e6f0", fontFamily: "Golos Text, sans-serif", color: "var(--navy)" }} onFocus={e => (e.target.style.borderColor = "var(--gold)")} onBlur={e => (e.target.style.borderColor = "#e0e6f0")} placeholder="ООО «Компания»" />
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-dark)", fontFamily: "Golos Text, sans-serif" }}>Телефон *</label>
-                            <input required value={contactForm.phone} onChange={e => setContactForm({ ...contactForm, phone: e.target.value })} className="w-full px-4 py-3 rounded text-sm outline-none" style={{ border: "1.5px solid #e0e6f0", fontFamily: "Golos Text, sans-serif", color: "var(--navy)" }} onFocus={e => (e.target.style.borderColor = "var(--gold)")} onBlur={e => (e.target.style.borderColor = "#e0e6f0")} placeholder="+7 (___) ___-__-__" />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-dark)", fontFamily: "Golos Text, sans-serif" }}>Email *</label>
-                            <input required type="email" value={contactForm.email} onChange={e => setContactForm({ ...contactForm, email: e.target.value })} className="w-full px-4 py-3 rounded text-sm outline-none" style={{ border: "1.5px solid #e0e6f0", fontFamily: "Golos Text, sans-serif", color: "var(--navy)" }} onFocus={e => (e.target.style.borderColor = "var(--gold)")} onBlur={e => (e.target.style.borderColor = "#e0e6f0")} placeholder="info@company.ru" />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-dark)", fontFamily: "Golos Text, sans-serif" }}>Услуга</label>
-                          <select value={contactForm.service} onChange={e => setContactForm({ ...contactForm, service: e.target.value })} className="w-full px-4 py-3 rounded text-sm outline-none" style={{ border: "1.5px solid #e0e6f0", fontFamily: "Golos Text, sans-serif", color: contactForm.service ? "var(--navy)" : "#9aabb8" }} onFocus={e => (e.target.style.borderColor = "var(--gold)")} onBlur={e => (e.target.style.borderColor = "#e0e6f0")}>
-                            <option value="">Выберите услугу</option>
-                            {SERVICES.map(s => <option key={s.title} value={s.title}>{s.title}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-dark)", fontFamily: "Golos Text, sans-serif" }}>Сообщение</label>
-                          <textarea value={contactForm.message} onChange={e => setContactForm({ ...contactForm, message: e.target.value })} rows={3} className="w-full px-4 py-3 rounded text-sm outline-none resize-none" style={{ border: "1.5px solid #e0e6f0", fontFamily: "Golos Text, sans-serif", color: "var(--navy)" }} onFocus={e => (e.target.style.borderColor = "var(--gold)")} onBlur={e => (e.target.style.borderColor = "#e0e6f0")} placeholder="Страна назначения, сумма, валюта..." />
-                        </div>
-                        <button type="submit" className="btn-primary w-full text-center py-3">Отправить заявку</button>
-                      </form>
+                      <h3 style={{ fontFamily: I, fontSize: "0.95rem", fontWeight: 700, color: "#111827", margin: "10px 0 8px" }}>{p.title}</h3>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                        <Icon name="DollarSign" size={12} style={{ color: "#2563eb" }} />
+                        <span style={{ fontFamily: I, color: "#6b7280", fontSize: "0.82rem" }}>Объём: {p.volume}</span>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: 6 }}>
+                        <Icon name="CheckCircle" size={13} style={{ color: "#16a34a", marginTop: 2, flexShrink: 0 }} />
+                        <span style={{ fontFamily: I, color: "#4b5563", fontSize: "0.85rem" }}>{p.result}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ textAlign: "center", marginTop: 40 }}>
+                <button onClick={() => nav("contacts")} className="btn-primary" style={{ padding: "12px 32px" }}>Обсудить ваш платёж</button>
+              </div>
+            </div>
+          </div>
+        </>}
+
+        {/* ══════ BLOG ══════ */}
+        {section === "blog" && <>
+          <div style={{ background: "linear-gradient(135deg,#1e3a8a,#1e40af)", padding: "72px 0" }}>
+            <div className="container mx-auto px-6">
+              <div className="section-label" style={{ color: "#93c5fd" }}><span style={{ background: "#93c5fd" }} />Экспертиза</div>
+              <h1 style={{ fontFamily: I, fontSize: "clamp(2rem,4vw,3rem)", fontWeight: 800, color: "#fff", letterSpacing: "-0.03em", marginTop: 8 }}>Блог</h1>
+            </div>
+          </div>
+          <div className="section-padding section-gray">
+            <div className="container mx-auto px-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {BLOG_ITEMS.map((b, i) => (
+                  <div key={i} style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", overflow: "hidden", cursor: "pointer", transition: "all 0.2s" }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = "0 8px 32px rgba(37,99,235,0.1)"; (e.currentTarget as HTMLElement).style.transform = "translateY(-3px)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = "none"; (e.currentTarget as HTMLElement).style.transform = "none"; }}>
+                    <div style={{ height: 4, background: "linear-gradient(90deg,#2563eb,#4f46e5)" }} />
+                    <div style={{ padding: "22px 22px 26px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+                        <span className="badge-blue">{b.tag}</span>
+                        <span style={{ fontFamily: I, color: "#9ca3af", fontSize: "0.78rem" }}>{b.date}</span>
+                      </div>
+                      <h3 style={{ fontFamily: I, fontSize: "1rem", fontWeight: 700, color: "#111827", lineHeight: 1.35, marginBottom: 10 }}>{b.title}</h3>
+                      <p style={{ fontFamily: I, color: "#6b7280", fontSize: "0.875rem", lineHeight: 1.65 }}>{b.excerpt}</p>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 18, fontFamily: I, fontSize: "0.83rem", fontWeight: 600, color: "#2563eb" }}>
+                        Читать далее <Icon name="ArrowRight" size={14} />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </>}
+
+        {/* ══════ FAQ ══════ */}
+        {section === "faq" && <>
+          <div style={{ background: "linear-gradient(135deg,#1e3a8a,#1e40af)", padding: "72px 0" }}>
+            <div className="container mx-auto px-6">
+              <div className="section-label" style={{ color: "#93c5fd" }}><span style={{ background: "#93c5fd" }} />FAQ</div>
+              <h1 style={{ fontFamily: I, fontSize: "clamp(2rem,4vw,3rem)", fontWeight: 800, color: "#fff", letterSpacing: "-0.03em", marginTop: 8 }}>Вопросы и ответы</h1>
+            </div>
+          </div>
+          <div className="section-padding section-gray">
+            <div className="container mx-auto px-6" style={{ maxWidth: 720 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {FAQ_ITEMS.map((item, i) => (
+                  <div key={i} style={{ background: "#fff", borderRadius: 10, border: `1px solid ${faqOpen === i ? "#bfdbfe" : "#e5e7eb"}`, overflow: "hidden", transition: "border-color 0.15s" }}>
+                    <button onClick={() => setFaqOpen(faqOpen === i ? null : i)} style={{ width: "100%", textAlign: "left", padding: "18px 22px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, background: "none", border: "none", cursor: "pointer" }}>
+                      <span style={{ fontFamily: I, fontWeight: 600, color: "#111827", fontSize: "0.95rem" }}>{item.q}</span>
+                      <Icon name={faqOpen === i ? "ChevronUp" : "ChevronDown"} size={18} style={{ color: "#2563eb", flexShrink: 0 }} />
+                    </button>
+                    {faqOpen === i && (
+                      <div className="animate-fade-in" style={{ padding: "0 22px 20px", borderTop: "1px solid #e5e7eb" }}>
+                        <p style={{ fontFamily: I, color: "#4b5563", lineHeight: 1.75, marginTop: 14 }}>{item.a}</p>
+                      </div>
                     )}
                   </div>
-                  <div className="space-y-5">
-                    <h2 style={{ fontFamily: "Cormorant, serif", fontSize: "1.8rem", fontWeight: 700, color: "var(--navy)" }} className="gold-line">Контактная информация</h2>
-                    <div className="mt-8 space-y-4">
-                      {[
-                        { icon: "MapPin", title: "Адрес", val: "123112, Москва, Пресненская наб., 12" },
-                        { icon: "Phone", title: "Телефон", val: "+7 (499) 398-50-02" },
-                        { icon: "Mail", title: "Email", val: "info@vedagentservice.ru" },
-                        { icon: "Clock", title: "Режим работы", val: "Пн–Пт: 9:00–18:00 (МСК)" },
-                      ].map((c, i) => (
-                        <div key={i} className="flex items-start gap-4 bg-white p-5 rounded" style={{ border: "1px solid #e8ecf3" }}>
-                          <div className="w-10 h-10 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(200,168,75,0.1)" }}>
-                            <Icon name={c.icon as any} size={18} style={{ color: "var(--gold)" }} />
-                          </div>
-                          <div>
-                            <div style={{ fontSize: "0.75rem", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-light)", fontFamily: "Golos Text, sans-serif" }}>{c.title}</div>
-                            <div style={{ color: "var(--navy)", marginTop: "4px", fontFamily: "Golos Text, sans-serif" }}>{c.val}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="p-5 rounded" style={{ backgroundColor: "var(--navy)", border: "1px solid rgba(200,168,75,0.2)" }}>
-                      <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.88rem", marginBottom: "12px", fontFamily: "Golos Text, sans-serif" }}>Для быстрой связи:</p>
-                      <div className="flex gap-3">
-                        <a href="https://t.me/+74993985002" target="_blank" rel="noopener noreferrer" className="btn-primary text-sm py-2 px-4 flex items-center gap-1.5">
-                          <Icon name="Send" size={13} />Telegram
-                        </a>
-                        <a href="https://wa.me/74993985002" target="_blank" rel="noopener noreferrer" className="btn-outline text-sm py-2 px-4 flex items-center gap-1.5">
-                          <Icon name="MessageCircle" size={13} />WhatsApp
-                        </a>
-                      </div>
-                    </div>
-                  </div>
+                ))}
+              </div>
+              <div style={{ background: "linear-gradient(135deg,#eff6ff,#eef2ff)", borderRadius: 12, padding: "28px 32px", textAlign: "center", marginTop: 32, border: "1px solid #bfdbfe" }}>
+                <p style={{ fontFamily: I, color: "#1e40af", fontWeight: 500, marginBottom: 16 }}>Остались вопросы? Ответим бесплатно</p>
+                <div className="flex flex-wrap gap-3 justify-center">
+                  <button onClick={() => nav("contacts")} className="btn-primary" style={{ padding: "10px 24px" }}>Задать вопрос</button>
+                  <a href="https://wa.me/74993985002" target="_blank" rel="noopener noreferrer" className="btn-outline" style={{ padding: "10px 24px", textDecoration: "none" }}>
+                    <Icon name="MessageCircle" size={15} />WhatsApp
+                  </a>
                 </div>
               </div>
             </div>
           </div>
-        )}
+        </>}
 
-        {/* ════════ CABINET ════════ */}
-        {section === "cabinet" && (
-          <div>
-            <div className="py-16" style={{ backgroundColor: "var(--navy)" }}>
-              <div className="container mx-auto px-6">
-                <h1 style={{ fontFamily: "Cormorant, serif", fontSize: "clamp(2rem, 4vw, 3rem)", fontWeight: 700, color: "white" }}>Личный кабинет</h1>
-                <p style={{ color: "var(--gold)", marginTop: "8px", fontSize: "0.85rem", letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: "Golos Text, sans-serif" }}>Управление платежами и документами</p>
-              </div>
+        {/* ══════ CONTACTS ══════ */}
+        {section === "contacts" && <>
+          <div style={{ background: "linear-gradient(135deg,#1e3a8a,#1e40af)", padding: "72px 0" }}>
+            <div className="container mx-auto px-6">
+              <div className="section-label" style={{ color: "#93c5fd" }}><span style={{ background: "#93c5fd" }} />Связь</div>
+              <h1 style={{ fontFamily: I, fontSize: "clamp(2rem,4vw,3rem)", fontWeight: 800, color: "#fff", letterSpacing: "-0.03em", marginTop: 8 }}>Контакты</h1>
             </div>
-
-            {!isLoggedIn ? (
-              <div className="section-padding bg-cream">
-                <div className="container mx-auto px-6 max-w-md">
-                  {!registerMode ? (
-                    <div className="bg-white rounded p-8" style={{ border: "1px solid #e8ecf3" }}>
-                      <h2 style={{ fontFamily: "Cormorant, serif", fontSize: "1.8rem", fontWeight: 700, color: "var(--navy)", marginBottom: "6px" }}>Вход в систему</h2>
-                      <p style={{ color: "var(--text-mid)", marginBottom: "28px", fontSize: "0.9rem", fontFamily: "Golos Text, sans-serif" }}>Введите данные для доступа к кабинету</p>
-                      <form onSubmit={handleLogin} className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-dark)", fontFamily: "Golos Text, sans-serif" }}>Email</label>
-                          <input type="email" required value={loginForm.email} onChange={e => setLoginForm({ ...loginForm, email: e.target.value })} className="w-full px-4 py-3 rounded text-sm outline-none" style={{ border: "1.5px solid #e0e6f0", fontFamily: "Golos Text, sans-serif" }} onFocus={e => (e.target.style.borderColor = "var(--gold)")} onBlur={e => (e.target.style.borderColor = "#e0e6f0")} placeholder="email@company.ru" />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-dark)", fontFamily: "Golos Text, sans-serif" }}>Пароль</label>
-                          <input type="password" required value={loginForm.password} onChange={e => setLoginForm({ ...loginForm, password: e.target.value })} className="w-full px-4 py-3 rounded text-sm outline-none" style={{ border: "1.5px solid #e0e6f0", fontFamily: "Golos Text, sans-serif" }} onFocus={e => (e.target.style.borderColor = "var(--gold)")} onBlur={e => (e.target.style.borderColor = "#e0e6f0")} placeholder="••••••••" />
-                        </div>
-                        {loginError && <p className="text-sm" style={{ color: "#e53e3e", fontFamily: "Golos Text, sans-serif" }}>{loginError}</p>}
-                        <button type="submit" className="btn-primary w-full text-center py-3">Войти</button>
-                        <div className="text-center pt-2">
-                          <button type="button" className="text-sm" style={{ color: "var(--gold)", fontFamily: "Golos Text, sans-serif" }} onClick={() => setRegisterMode(true)}>
-                            Нет аккаунта? Зарегистрироваться
-                          </button>
-                        </div>
-                      </form>
+          </div>
+          <div className="section-padding section-gray">
+            <div className="container mx-auto px-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                <div style={{ background: "#fff", borderRadius: 16, padding: "32px", border: "1px solid #e5e7eb" }}>
+                  <h2 style={{ fontFamily: I, fontSize: "1.4rem", fontWeight: 800, color: "#111827", marginBottom: 6, letterSpacing: "-0.02em" }}>Оставить заявку</h2>
+                  <p style={{ fontFamily: I, color: "#6b7280", marginBottom: 24, fontSize: "0.875rem" }}>Ответим в течение 30 минут в рабочее время</p>
+                  {contactSent ? (
+                    <div style={{ textAlign: "center", padding: "32px 0" }}>
+                      <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#eff6ff", margin: "0 auto 16px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <Icon name="CheckCircle" size={30} style={{ color: "#2563eb" }} />
+                      </div>
+                      <h3 style={{ fontFamily: I, fontSize: "1.3rem", fontWeight: 700, color: "#111827" }}>Заявка принята!</h3>
+                      <p style={{ fontFamily: I, color: "#6b7280", marginTop: 8 }}>Менеджер свяжется с вами в ближайшее время.</p>
+                      <button className="btn-primary" style={{ marginTop: 20, padding: "10px 24px" }} onClick={() => setContactSent(false)}>Отправить ещё</button>
                     </div>
                   ) : (
-                    <div className="bg-white rounded p-8" style={{ border: "1px solid #e8ecf3" }}>
-                      {regDone ? (
-                        <div className="text-center py-6">
-                          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: "rgba(200,168,75,0.15)" }}>
-                            <Icon name="CheckCircle" size={32} style={{ color: "var(--gold)" }} />
-                          </div>
-                          <h3 style={{ fontFamily: "Cormorant, serif", fontSize: "1.5rem", fontWeight: 700, color: "var(--navy)" }}>Заявка отправлена!</h3>
-                          <p style={{ color: "var(--text-mid)", marginTop: "8px", fontFamily: "Golos Text, sans-serif", fontSize: "0.9rem" }}>Мы проведём KYC-верификацию и активируем доступ в течение 1 рабочего дня.</p>
-                          <button className="btn-primary mt-6" onClick={() => { setRegisterMode(false); setRegDone(false); }}>Вернуться ко входу</button>
+                    <form onSubmit={handleContact} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="form-label">Имя *</label>
+                          <input required className="form-input" value={contactForm.name} onChange={e => setContactForm({...contactForm, name: e.target.value})} placeholder="Александр" />
                         </div>
-                      ) : (
-                        <>
-                          <h2 style={{ fontFamily: "Cormorant, serif", fontSize: "1.8rem", fontWeight: 700, color: "var(--navy)", marginBottom: "6px" }}>Регистрация</h2>
-                          <p style={{ color: "var(--text-mid)", marginBottom: "28px", fontSize: "0.9rem", fontFamily: "Golos Text, sans-serif" }}>Только для юридических лиц и ИП</p>
-                          <form onSubmit={handleRegister} className="space-y-4">
-                            {[
-                              { label: "Контактное лицо *", key: "name", ph: "Александр Иванов", type: "text" },
-                              { label: "Наименование компании *", key: "company", ph: "ООО «Компания»", type: "text" },
-                              { label: "ИНН компании *", key: "inn", ph: "7714123456", type: "text" },
-                              { label: "Email *", key: "email", ph: "email@company.ru", type: "email" },
-                              { label: "Телефон *", key: "phone", ph: "+7 (___) ___-__-__", type: "text" },
-                              { label: "Пароль (мин. 6 симв.) *", key: "password", ph: "••••••••", type: "password" },
-                            ].map(f => (
-                              <div key={f.key}>
-                                <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-dark)", fontFamily: "Golos Text, sans-serif" }}>{f.label}</label>
-                                <input type={f.type} required value={(regForm as any)[f.key]} onChange={e => setRegForm({ ...regForm, [f.key]: e.target.value })} className="w-full px-4 py-3 rounded text-sm outline-none" style={{ border: "1.5px solid #e0e6f0", fontFamily: "Golos Text, sans-serif" }} onFocus={e => (e.target.style.borderColor = "var(--gold)")} onBlur={e => (e.target.style.borderColor = "#e0e6f0")} placeholder={f.ph} />
-                              </div>
-                            ))}
-                            <button type="submit" className="btn-primary w-full text-center py-3">Подать заявку на регистрацию</button>
-                            <div className="text-center pt-2">
-                              <button type="button" className="text-sm" style={{ color: "var(--gold)", fontFamily: "Golos Text, sans-serif" }} onClick={() => setRegisterMode(false)}>Уже есть аккаунт? Войти</button>
-                            </div>
-                          </form>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              /* ─── CABINET INTERIOR ─── */
-              <div className="bg-cream min-h-screen">
-                <div className="container mx-auto px-6 py-8">
-                  <div className="flex flex-col lg:flex-row gap-6">
-
-                    {/* Sidebar */}
-                    <aside className="lg:w-60 flex-shrink-0">
-                      <div className="bg-white rounded p-5 mb-4" style={{ border: "1px solid #e8ecf3" }}>
-                        <div className="w-12 h-12 rounded-full flex items-center justify-center mb-3" style={{ backgroundColor: "var(--navy)", fontFamily: "Cormorant, serif", fontSize: "1.2rem", fontWeight: 700, color: "var(--gold)" }}>
-                          {loginForm.email[0]?.toUpperCase() || "U"}
-                        </div>
-                        <div style={{ fontFamily: "Golos Text, sans-serif", fontWeight: 600, color: "var(--navy)", fontSize: "0.88rem", wordBreak: "break-all" }}>{loginForm.email}</div>
-                        <div className="flex items-center gap-1.5 mt-1">
-                          <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#48bb78" }} />
-                          <span style={{ fontSize: "0.75rem", color: "var(--text-light)", fontFamily: "Golos Text, sans-serif" }}>Верифицирован</span>
+                        <div>
+                          <label className="form-label">Компания</label>
+                          <input className="form-input" value={contactForm.company} onChange={e => setContactForm({...contactForm, company: e.target.value})} placeholder="ООО «Компания»" />
                         </div>
                       </div>
-                      <nav className="bg-white rounded overflow-hidden" style={{ border: "1px solid #e8ecf3" }}>
-                        {([
-                          { key: "dashboard", icon: "LayoutDashboard", label: "Обзор" },
-                          { key: "orders", icon: "ArrowLeftRight", label: "Платежи" },
-                          { key: "documents", icon: "FolderOpen", label: "Документы" },
-                          { key: "messages", icon: "MessageSquare", label: "Сообщения", badge: 2 },
-                          { key: "rates", icon: "TrendingUp", label: "Курсы валют" },
-                          { key: "settings", icon: "Settings", label: "Настройки" },
-                        ] as Array<{ key: CabinetTab; icon: string; label: string; badge?: number }>).map(item => (
-                          <button key={item.key} onClick={() => setCabinetTab(item.key)} className="w-full flex items-center gap-3 px-4 py-3 text-sm transition-all border-l-2" style={{ borderLeftColor: cabinetTab === item.key ? "var(--gold)" : "transparent", backgroundColor: cabinetTab === item.key ? "rgba(200,168,75,0.06)" : "transparent", color: cabinetTab === item.key ? "var(--navy)" : "var(--text-mid)", fontFamily: "Golos Text, sans-serif", fontWeight: cabinetTab === item.key ? 600 : 400 }}>
-                            <Icon name={item.icon as any} size={16} />
-                            <span>{item.label}</span>
-                            {item.badge ? <span className="ml-auto text-xs px-1.5 py-0.5 rounded-full" style={{ backgroundColor: "var(--gold)", color: "var(--navy)", fontWeight: 700 }}>{item.badge}</span> : null}
-                          </button>
-                        ))}
-                        <div style={{ borderTop: "1px solid #e8ecf3" }}>
-                          <button onClick={() => setIsLoggedIn(false)} className="w-full flex items-center gap-3 px-4 py-3 text-sm" style={{ color: "#e53e3e", fontFamily: "Golos Text, sans-serif" }}>
-                            <Icon name="LogOut" size={16} /><span>Выйти</span>
-                          </button>
-                        </div>
-                      </nav>
-                    </aside>
-
-                    {/* Main content */}
-                    <div className="flex-1 min-w-0">
-
-                      {/* Dashboard */}
-                      {cabinetTab === "dashboard" && (
-                        <div className="space-y-6">
-                          <div className="flex items-center justify-between">
-                            <h2 style={{ fontFamily: "Cormorant, serif", fontSize: "1.8rem", fontWeight: 700, color: "var(--navy)" }}>Обзор</h2>
-                            <button onClick={() => nav("contacts")} className="btn-primary text-sm py-2 px-4">+ Новый платёж</button>
-                          </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                            {[
-                              { icon: "ArrowLeftRight", label: "Всего платежей", val: "4", sub: "за всё время", color: "var(--gold)" },
-                              { icon: "Clock", label: "В процессе", val: "2", sub: "активных", color: "#4a90d9" },
-                              { icon: "CheckCircle", label: "Исполнено", val: "2", sub: "успешных", color: "#48bb78" },
-                              { icon: "DollarSign", label: "Объём", val: "$27.5k", sub: "за всё время", color: "#9b7fe8" },
-                            ].map((s, i) => (
-                              <div key={i} className="bg-white rounded p-5" style={{ border: "1px solid #e8ecf3" }}>
-                                <div className="flex items-center gap-2 mb-2">
-                                  <Icon name={s.icon as any} size={16} style={{ color: s.color }} />
-                                  <span style={{ fontSize: "0.78rem", color: "var(--text-light)", fontFamily: "Golos Text, sans-serif" }}>{s.label}</span>
-                                </div>
-                                <div style={{ fontFamily: "Cormorant, serif", fontSize: "2rem", fontWeight: 700, color: "var(--navy)" }}>{s.val}</div>
-                                <div style={{ fontSize: "0.75rem", color: "var(--text-light)", fontFamily: "Golos Text, sans-serif" }}>{s.sub}</div>
-                              </div>
-                            ))}
-                          </div>
-
-                          {/* Recent orders */}
-                          <div className="bg-white rounded p-6" style={{ border: "1px solid #e8ecf3" }}>
-                            <div className="flex items-center justify-between mb-4">
-                              <h3 style={{ fontFamily: "Cormorant, serif", fontSize: "1.2rem", fontWeight: 700, color: "var(--navy)" }}>Последние платежи</h3>
-                              <button onClick={() => setCabinetTab("orders")} style={{ fontSize: "0.82rem", color: "var(--gold)", fontFamily: "Golos Text, sans-serif" }}>Все платежи →</button>
-                            </div>
-                            <div className="space-y-3">
-                              {ORDERS_DATA.slice(0, 3).map((o, i) => (
-                                <div key={i} className="flex items-center justify-between py-3 gap-3" style={{ borderBottom: "1px solid #f0f4f8" }}>
-                                  <div className="flex items-center gap-3 min-w-0">
-                                    <div className="w-9 h-9 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(200,168,75,0.1)" }}>
-                                      <Icon name="Globe" size={15} style={{ color: "var(--gold)" }} />
-                                    </div>
-                                    <div className="min-w-0">
-                                      <div style={{ fontFamily: "Golos Text, sans-serif", fontWeight: 600, color: "var(--navy)", fontSize: "0.88rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{o.country} · {o.service}</div>
-                                      <div style={{ fontSize: "0.75rem", color: "var(--text-light)", fontFamily: "Golos Text, sans-serif" }}>{o.id} · {o.date}</div>
-                                    </div>
-                                  </div>
-                                  <div className="flex items-center gap-3 flex-shrink-0">
-                                    <span style={{ fontFamily: "Golos Text, sans-serif", fontWeight: 600, color: "var(--navy)", fontSize: "0.9rem" }}>{o.amount}</span>
-                                    <StatusBadge status={o.status} />
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* Messages preview */}
-                          <div className="bg-white rounded p-6" style={{ border: "1px solid #e8ecf3" }}>
-                            <div className="flex items-center justify-between mb-4">
-                              <h3 style={{ fontFamily: "Cormorant, serif", fontSize: "1.2rem", fontWeight: 700, color: "var(--navy)" }}>Новые сообщения</h3>
-                              <button onClick={() => setCabinetTab("messages")} style={{ fontSize: "0.82rem", color: "var(--gold)", fontFamily: "Golos Text, sans-serif" }}>Все сообщения →</button>
-                            </div>
-                            {MESSAGES_DATA.filter(m => m.unread).map((msg, i) => (
-                              <div key={i} className="flex items-start gap-3 py-3" style={{ borderBottom: "1px solid #f0f4f8" }}>
-                                <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--navy)", fontFamily: "Cormorant, serif", fontWeight: 700, color: "var(--gold)", fontSize: "1rem" }}>{msg.from[0]}</div>
-                                <div>
-                                  <div style={{ fontFamily: "Golos Text, sans-serif", fontWeight: 600, color: "var(--navy)", fontSize: "0.85rem" }}>{msg.from}</div>
-                                  <p style={{ color: "var(--text-mid)", fontSize: "0.82rem", lineHeight: 1.5, fontFamily: "Golos Text, sans-serif", marginTop: "2px" }}>{msg.text.slice(0, 100)}...</p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Orders */}
-                      {cabinetTab === "orders" && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <div className="flex items-center justify-between mb-5">
-                            <h2 style={{ fontFamily: "Cormorant, serif", fontSize: "1.8rem", fontWeight: 700, color: "var(--navy)" }}>Мои платежи</h2>
-                            <button onClick={() => nav("contacts")} className="btn-primary text-sm py-2 px-4">+ Новый платёж</button>
-                          </div>
-                          <div className="bg-white rounded overflow-hidden" style={{ border: "1px solid #e8ecf3" }}>
-                            <div className="overflow-x-auto">
-                              <table className="w-full">
-                                <thead>
-                                  <tr style={{ borderBottom: "1px solid #e8ecf3", backgroundColor: "#fafbfc" }}>
-                                    {["ID", "Услуга", "Направление", "Сумма", "Менеджер", "Дата", "Статус"].map(h => (
-                                      <th key={h} className="px-4 py-3 text-left text-xs font-semibold whitespace-nowrap" style={{ color: "var(--text-light)", textTransform: "uppercase", letterSpacing: "0.06em", fontFamily: "Golos Text, sans-serif" }}>{h}</th>
-                                    ))}
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {ORDERS_DATA.map((o, i) => (
-                                    <tr key={i} style={{ borderBottom: "1px solid #f0f4f8" }}>
-                                      <td className="px-4 py-4 text-sm whitespace-nowrap" style={{ color: "var(--gold)", fontFamily: "Golos Text, sans-serif", fontWeight: 600 }}>{o.id}</td>
-                                      <td className="px-4 py-4 text-sm" style={{ color: "var(--navy)", fontFamily: "Golos Text, sans-serif" }}>{o.service}</td>
-                                      <td className="px-4 py-4 text-sm whitespace-nowrap" style={{ color: "var(--text-mid)", fontFamily: "Golos Text, sans-serif" }}>{o.country}</td>
-                                      <td className="px-4 py-4 text-sm whitespace-nowrap font-semibold" style={{ color: "var(--navy)", fontFamily: "Golos Text, sans-serif" }}>{o.amount}</td>
-                                      <td className="px-4 py-4 text-sm whitespace-nowrap" style={{ color: "var(--text-mid)", fontFamily: "Golos Text, sans-serif" }}>{o.manager}</td>
-                                      <td className="px-4 py-4 text-sm whitespace-nowrap" style={{ color: "var(--text-mid)", fontFamily: "Golos Text, sans-serif" }}>{o.date}</td>
-                                      <td className="px-4 py-4 whitespace-nowrap"><StatusBadge status={o.status} /></td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          </div>
+                          <label className="form-label">Телефон *</label>
+                          <input required type="tel" className="form-input" value={contactForm.phone} onChange={e => setContactForm({...contactForm, phone: e.target.value})} placeholder="+7 (___) ___-__-__" />
                         </div>
-                      )}
-
-                      {/* Documents */}
-                      {cabinetTab === "documents" && (
                         <div>
-                          <h2 style={{ fontFamily: "Cormorant, serif", fontSize: "1.8rem", fontWeight: 700, color: "var(--navy)", marginBottom: "20px" }}>Документы</h2>
-                          <div className="space-y-3">
-                            {DOCS_DATA.map((doc, i) => (
-                              <div key={i} className="flex items-center justify-between bg-white rounded p-4" style={{ border: "1px solid #e8ecf3" }}>
-                                <div className="flex items-center gap-3">
-                                  <div className="w-9 h-9 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: doc.type === "PDF" ? "rgba(229,62,62,0.1)" : "rgba(74,144,217,0.1)" }}>
-                                    <Icon name="FileText" size={16} style={{ color: doc.type === "PDF" ? "#e53e3e" : "#4a90d9" }} />
-                                  </div>
-                                  <div>
-                                    <div style={{ fontFamily: "Golos Text, sans-serif", fontWeight: 500, color: "var(--navy)", fontSize: "0.9rem" }}>{doc.name}</div>
-                                    <div style={{ fontSize: "0.75rem", color: "var(--text-light)", fontFamily: "Golos Text, sans-serif" }}>{doc.type} · {doc.size} · {doc.date}</div>
-                                  </div>
-                                </div>
-                                <button className="flex items-center gap-1 text-sm flex-shrink-0" style={{ color: "var(--gold)", fontFamily: "Golos Text, sans-serif" }}>
-                                  <Icon name="Download" size={14} />Скачать
-                                </button>
-                              </div>
-                            ))}
-                          </div>
+                          <label className="form-label">Email *</label>
+                          <input required type="email" className="form-input" value={contactForm.email} onChange={e => setContactForm({...contactForm, email: e.target.value})} placeholder="info@company.ru" />
                         </div>
-                      )}
-
-                      {/* Messages */}
-                      {cabinetTab === "messages" && (
-                        <div>
-                          <h2 style={{ fontFamily: "Cormorant, serif", fontSize: "1.8rem", fontWeight: 700, color: "var(--navy)", marginBottom: "20px" }}>Сообщения</h2>
-                          <div className="space-y-3">
-                            {MESSAGES_DATA.map((msg, i) => (
-                              <div key={i} className="bg-white rounded p-5" style={{ border: msg.unread ? "1.5px solid var(--gold)" : "1px solid #e8ecf3" }}>
-                                <div className="flex items-start gap-3">
-                                  <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-base" style={{ backgroundColor: "var(--navy)", fontFamily: "Cormorant, serif", fontWeight: 700, color: "var(--gold)" }}>{msg.from[0]}</div>
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                                      <span style={{ fontFamily: "Golos Text, sans-serif", fontWeight: 600, color: "var(--navy)", fontSize: "0.9rem" }}>{msg.from}</span>
-                                      <span style={{ fontSize: "0.75rem", color: "var(--text-light)", fontFamily: "Golos Text, sans-serif" }}>{msg.role}</span>
-                                      {msg.unread && <span className="ml-auto text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: "var(--gold)", color: "var(--navy)", fontWeight: 700 }}>Новое</span>}
-                                    </div>
-                                    <p style={{ color: "var(--text-mid)", fontSize: "0.88rem", lineHeight: 1.65, fontFamily: "Golos Text, sans-serif" }}>{msg.text}</p>
-                                    <div style={{ fontSize: "0.75rem", color: "var(--text-light)", marginTop: "8px", fontFamily: "Golos Text, sans-serif" }}>{msg.time}</div>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                          {/* Reply form */}
-                          <div className="mt-6 bg-white rounded p-5" style={{ border: "1px solid #e8ecf3" }}>
-                            <h3 style={{ fontFamily: "Golos Text, sans-serif", fontWeight: 600, color: "var(--navy)", marginBottom: "12px", fontSize: "0.9rem" }}>Написать менеджеру</h3>
-                            <textarea rows={3} className="w-full px-4 py-3 rounded text-sm outline-none resize-none" style={{ border: "1.5px solid #e0e6f0", fontFamily: "Golos Text, sans-serif", color: "var(--navy)" }} onFocus={e => (e.target.style.borderColor = "var(--gold)")} onBlur={e => (e.target.style.borderColor = "#e0e6f0")} placeholder="Напишите ваш вопрос..." />
-                            <button className="btn-primary mt-3 text-sm py-2 px-5">Отправить</button>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Rates */}
-                      {cabinetTab === "rates" && (
-                        <div>
-                          <h2 style={{ fontFamily: "Cormorant, serif", fontSize: "1.8rem", fontWeight: 700, color: "var(--navy)", marginBottom: "8px" }}>Курсы валют</h2>
-                          <p style={{ color: "var(--text-mid)", marginBottom: "24px", fontSize: "0.88rem", fontFamily: "Golos Text, sans-serif" }}>Обновляется каждые 5 минут. Спред ±1.5% от рыночного курса.</p>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-                            {ratesLoading ? (
-                              <div style={{ color: "var(--text-mid)", fontFamily: "Golos Text, sans-serif" }}>Загрузка курсов...</div>
-                            ) : (
-                              rates.map(r => (
-                                <div key={r.code} className="bg-white rounded p-5" style={{ border: "1px solid #e8ecf3" }}>
-                                  <div className="flex items-center gap-3 mb-4">
-                                    <span style={{ fontSize: "1.8rem" }}>{r.flag}</span>
-                                    <div>
-                                      <div style={{ fontFamily: "Cormorant, serif", fontSize: "1.3rem", fontWeight: 700, color: "var(--navy)" }}>{r.code}</div>
-                                      <div style={{ fontSize: "0.78rem", color: "var(--text-light)", fontFamily: "Golos Text, sans-serif" }}>{r.name}</div>
-                                    </div>
-                                    <span className="ml-auto text-sm font-semibold" style={{ color: r.change >= 0 ? "#48bb78" : "#fc8181", fontFamily: "Golos Text, sans-serif" }}>{r.change >= 0 ? "▲" : "▼"}{Math.abs(r.change).toFixed(2)}</span>
-                                  </div>
-                                  <div className="grid grid-cols-2 gap-3">
-                                    <div className="rounded p-3" style={{ backgroundColor: "#f8fffe" }}>
-                                      <div style={{ fontSize: "0.72rem", color: "var(--text-light)", fontFamily: "Golos Text, sans-serif", textTransform: "uppercase", letterSpacing: "0.06em" }}>Покупка</div>
-                                      <div style={{ fontFamily: "Cormorant, serif", fontSize: "1.5rem", fontWeight: 700, color: "var(--navy)" }}>{r.buy.toFixed(2)}</div>
-                                      <div style={{ fontSize: "0.72rem", color: "var(--text-light)", fontFamily: "Golos Text, sans-serif" }}>₽ за 1 {r.code}</div>
-                                    </div>
-                                    <div className="rounded p-3" style={{ backgroundColor: "#fffaf0" }}>
-                                      <div style={{ fontSize: "0.72rem", color: "var(--text-light)", fontFamily: "Golos Text, sans-serif", textTransform: "uppercase", letterSpacing: "0.06em" }}>Продажа</div>
-                                      <div style={{ fontFamily: "Cormorant, serif", fontSize: "1.5rem", fontWeight: 700, color: "var(--gold)" }}>{r.sell.toFixed(2)}</div>
-                                      <div style={{ fontSize: "0.72rem", color: "var(--text-light)", fontFamily: "Golos Text, sans-serif" }}>₽ за 1 {r.code}</div>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))
-                            )}
-                          </div>
-                          <div className="bg-white rounded p-5" style={{ border: "1px solid #e8ecf3" }}>
-                            <h3 style={{ fontFamily: "Golos Text, sans-serif", fontWeight: 600, color: "var(--navy)", marginBottom: "12px", fontSize: "0.95rem" }}>Запрос на фиксацию курса</h3>
-                            <p style={{ color: "var(--text-mid)", fontSize: "0.85rem", fontFamily: "Golos Text, sans-serif", marginBottom: "14px" }}>Зафиксируем курс на срок до 30 дней для планирования ваших платежей.</p>
-                            <button onClick={() => nav("contacts")} className="btn-primary text-sm py-2 px-5">Запросить фиксацию курса</button>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Settings */}
-                      {cabinetTab === "settings" && (
-                        <div>
-                          <h2 style={{ fontFamily: "Cormorant, serif", fontSize: "1.8rem", fontWeight: 700, color: "var(--navy)", marginBottom: "20px" }}>Настройки профиля</h2>
-                          <div className="space-y-6">
-                            <div className="bg-white rounded p-6" style={{ border: "1px solid #e8ecf3" }}>
-                              <h3 style={{ fontFamily: "Golos Text, sans-serif", fontWeight: 600, color: "var(--navy)", marginBottom: "16px", fontSize: "0.95rem" }}>Данные компании</h3>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {[
-                                  { label: "Контактное лицо", val: "Пользователь" },
-                                  { label: "Email", val: loginForm.email },
-                                  { label: "Телефон", val: "+7 (___) ___-__-__" },
-                                  { label: "Компания", val: "" },
-                                  { label: "ИНН", val: "" },
-                                  { label: "КПП", val: "" },
-                                ].map((f, i) => (
-                                  <div key={i}>
-                                    <label className="block text-sm font-medium mb-1" style={{ color: "var(--text-dark)", fontFamily: "Golos Text, sans-serif" }}>{f.label}</label>
-                                    <input defaultValue={f.val} className="w-full px-4 py-3 rounded text-sm outline-none" style={{ border: "1.5px solid #e0e6f0", fontFamily: "Golos Text, sans-serif", color: "var(--navy)" }} onFocus={e => (e.target.style.borderColor = "var(--gold)")} onBlur={e => (e.target.style.borderColor = "#e0e6f0")} />
-                                  </div>
-                                ))}
-                              </div>
-                              <button className="btn-primary mt-5 text-sm py-2.5 px-6">Сохранить изменения</button>
-                            </div>
-                            <div className="bg-white rounded p-6" style={{ border: "1px solid #e8ecf3" }}>
-                              <h3 style={{ fontFamily: "Golos Text, sans-serif", fontWeight: 600, color: "var(--navy)", marginBottom: "16px", fontSize: "0.95rem" }}>Уведомления</h3>
-                              {[
-                                { label: "Email-уведомления об исполнении платежей", checked: true },
-                                { label: "SMS при смене статуса заявки", checked: true },
-                                { label: "Еженедельный отчёт по курсам валют", checked: false },
-                              ].map((n, i) => (
-                                <div key={i} className="flex items-center justify-between py-3" style={{ borderBottom: "1px solid #f0f4f8" }}>
-                                  <span style={{ fontFamily: "Golos Text, sans-serif", fontSize: "0.9rem", color: "var(--text-mid)" }}>{n.label}</span>
-                                  <div className="w-10 h-5 rounded-full cursor-pointer flex items-center px-0.5 transition-colors" style={{ backgroundColor: n.checked ? "var(--gold)" : "#d1d5db" }}>
-                                    <div className="w-4 h-4 rounded-full bg-white shadow-sm transition-transform" style={{ transform: n.checked ? "translateX(20px)" : "translateX(0)" }} />
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      )}
+                      </div>
+                      <div>
+                        <label className="form-label">Услуга</label>
+                        <select className="form-input" value={contactForm.service} onChange={e => setContactForm({...contactForm, service: e.target.value})}>
+                          <option value="">Выберите услугу</option>
+                          {SERVICES.map(s => <option key={s.title} value={s.title}>{s.title}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="form-label">Сообщение</label>
+                        <textarea rows={3} className="form-input" style={{ resize: "none" } as any} value={contactForm.message} onChange={e => setContactForm({...contactForm, message: e.target.value})} placeholder="Страна назначения, сумма, валюта..." />
+                      </div>
+                      <button type="submit" className="btn-primary" style={{ padding: "12px 0", justifyContent: "center", width: "100%", fontSize: "0.95rem" }}>Отправить заявку</button>
+                    </form>
+                  )}
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  <h2 style={{ fontFamily: I, fontSize: "1.4rem", fontWeight: 800, color: "#111827", letterSpacing: "-0.02em" }}>Контактная информация</h2>
+                  {[
+                    { icon: "MapPin", title: "Адрес", val: "123112, Москва, Пресненская наб., 12" },
+                    { icon: "Phone", title: "Телефон", val: "+7 (499) 398-50-02" },
+                    { icon: "Mail", title: "Email", val: "info@vedagentservice.ru" },
+                    { icon: "Clock", title: "Режим работы", val: "Пн–Пт: 9:00–18:00 (МСК)" },
+                  ].map((c, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 14, padding: "16px 18px", background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb" }}>
+                      <div className="icon-box"><Icon name={c.icon as any} size={18} style={{ color: "#2563eb" }} /></div>
+                      <div>
+                        <div style={{ fontFamily: I, fontSize: "0.72rem", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#9ca3af", marginBottom: 3 }}>{c.title}</div>
+                        <div style={{ fontFamily: I, color: "#111827", fontWeight: 500 }}>{c.val}</div>
+                      </div>
+                    </div>
+                  ))}
+                  <div style={{ background: "linear-gradient(135deg,#1e3a8a,#1e40af)", borderRadius: 12, padding: "20px 22px" }}>
+                    <p style={{ fontFamily: I, color: "rgba(255,255,255,0.7)", fontSize: "0.875rem", marginBottom: 12 }}>Быстрая связь:</p>
+                    <div className="flex gap-3">
+                      <a href="https://t.me/+74993985002" target="_blank" rel="noopener noreferrer" className="btn-white" style={{ padding: "9px 20px", fontSize: "0.85rem", textDecoration: "none" }}>
+                        <Icon name="Send" size={14} />Telegram
+                      </a>
+                      <a href="https://wa.me/74993985002" target="_blank" rel="noopener noreferrer" className="btn-white-outline" style={{ padding: "9px 20px", fontSize: "0.85rem", textDecoration: "none" }}>
+                        <Icon name="MessageCircle" size={14} />WhatsApp
+                      </a>
                     </div>
                   </div>
                 </div>
               </div>
-            )}
+            </div>
           </div>
-        )}
+        </>}
+
+        {/* ══════ CABINET ══════ */}
+        {section === "cabinet" && <>
+          <div style={{ background: "linear-gradient(135deg,#1e3a8a,#1e40af)", padding: "48px 0" }}>
+            <div className="container mx-auto px-6">
+              <h1 style={{ fontFamily: I, fontSize: "clamp(1.6rem,3vw,2.2rem)", fontWeight: 800, color: "#fff", letterSpacing: "-0.025em" }}>Личный кабинет</h1>
+              <p style={{ fontFamily: I, color: "rgba(255,255,255,0.6)", marginTop: 6, fontSize: "0.875rem" }}>Управление платежами и документами</p>
+            </div>
+          </div>
+
+          {!isLoggedIn ? (
+            <div className="section-padding section-gray">
+              <div className="container mx-auto px-6" style={{ maxWidth: 440 }}>
+                {!registerMode ? (
+                  <div style={{ background: "#fff", borderRadius: 16, padding: "32px", border: "1px solid #e5e7eb" }}>
+                    <h2 style={{ fontFamily: I, fontSize: "1.4rem", fontWeight: 800, color: "#111827", marginBottom: 6 }}>Вход в систему</h2>
+                    <p style={{ fontFamily: I, color: "#6b7280", marginBottom: 24, fontSize: "0.875rem" }}>Введите данные для доступа</p>
+                    <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                      <div>
+                        <label className="form-label">Email</label>
+                        <input type="email" required className="form-input" value={loginForm.email} onChange={e => setLoginForm({...loginForm, email: e.target.value})} placeholder="email@company.ru" />
+                      </div>
+                      <div>
+                        <label className="form-label">Пароль</label>
+                        <input type="password" required className="form-input" value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})} placeholder="••••••••" />
+                      </div>
+                      {loginError && <p style={{ fontFamily: I, fontSize: "0.85rem", color: "#dc2626" }}>{loginError}</p>}
+                      <button type="submit" className="btn-primary" style={{ padding: "12px 0", justifyContent: "center", width: "100%" }}>Войти</button>
+                      <div style={{ textAlign: "center" }}>
+                        <button type="button" onClick={() => setRegisterMode(true)} style={{ fontFamily: I, fontSize: "0.85rem", color: "#2563eb", background: "none", border: "none", cursor: "pointer" }}>Нет аккаунта? Зарегистрироваться</button>
+                      </div>
+                    </form>
+                  </div>
+                ) : (
+                  <div style={{ background: "#fff", borderRadius: 16, padding: "32px", border: "1px solid #e5e7eb" }}>
+                    {regDone ? (
+                      <div style={{ textAlign: "center", padding: "16px 0" }}>
+                        <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#eff6ff", margin: "0 auto 16px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <Icon name="CheckCircle" size={30} style={{ color: "#2563eb" }} />
+                        </div>
+                        <h3 style={{ fontFamily: I, fontSize: "1.2rem", fontWeight: 700, color: "#111827" }}>Заявка отправлена!</h3>
+                        <p style={{ fontFamily: I, color: "#6b7280", marginTop: 8, fontSize: "0.875rem" }}>Активируем доступ после KYC-верификации (1 рабочий день).</p>
+                        <button className="btn-primary" style={{ marginTop: 20, padding: "10px 24px" }} onClick={() => { setRegisterMode(false); setRegDone(false); }}>Вернуться ко входу</button>
+                      </div>
+                    ) : (
+                      <>
+                        <h2 style={{ fontFamily: I, fontSize: "1.4rem", fontWeight: 800, color: "#111827", marginBottom: 6 }}>Регистрация</h2>
+                        <p style={{ fontFamily: I, color: "#6b7280", marginBottom: 24, fontSize: "0.875rem" }}>Только для юридических лиц и ИП</p>
+                        <form onSubmit={handleRegister} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                          {[
+                            { label: "Контактное лицо *", key: "name", ph: "Александр Иванов", type: "text" },
+                            { label: "Наименование компании *", key: "company", ph: "ООО «Компания»", type: "text" },
+                            { label: "ИНН компании *", key: "inn", ph: "7714123456", type: "text" },
+                            { label: "Email *", key: "email", ph: "email@company.ru", type: "email" },
+                            { label: "Телефон *", key: "phone", ph: "+7 (___) ___-__-__", type: "text" },
+                            { label: "Пароль (мин. 6 символов) *", key: "password", ph: "••••••••", type: "password" },
+                          ].map(f => (
+                            <div key={f.key}>
+                              <label className="form-label">{f.label}</label>
+                              <input type={f.type} required className="form-input" value={(regForm as any)[f.key]} onChange={e => setRegForm({...regForm, [f.key]: e.target.value})} placeholder={f.ph} />
+                            </div>
+                          ))}
+                          <button type="submit" className="btn-primary" style={{ padding: "12px 0", justifyContent: "center", width: "100%", marginTop: 4 }}>Подать заявку</button>
+                          <div style={{ textAlign: "center" }}>
+                            <button type="button" onClick={() => setRegisterMode(false)} style={{ fontFamily: I, fontSize: "0.85rem", color: "#2563eb", background: "none", border: "none", cursor: "pointer" }}>Уже есть аккаунт? Войти</button>
+                          </div>
+                        </form>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div style={{ background: "#f9fafb", minHeight: "calc(100vh - 97px)" }}>
+              <div className="container mx-auto px-6 py-8">
+                <div className="flex flex-col lg:flex-row gap-6">
+                  {/* Sidebar */}
+                  <aside className="lg:w-56 flex-shrink-0">
+                    <div style={{ background: "#fff", borderRadius: 12, padding: "16px 14px", border: "1px solid #e5e7eb", marginBottom: 12 }}>
+                      <div style={{ width: 44, height: 44, borderRadius: "50%", background: "linear-gradient(135deg,#2563eb,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: I, fontSize: "1.1rem", fontWeight: 700, color: "#fff", marginBottom: 10 }}>
+                        {loginForm.email[0]?.toUpperCase() || "U"}
+                      </div>
+                      <div style={{ fontFamily: I, fontWeight: 600, color: "#111827", fontSize: "0.85rem", wordBreak: "break-all" }}>{loginForm.email}</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 4 }}>
+                        <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#16a34a" }} />
+                        <span style={{ fontFamily: I, fontSize: "0.72rem", color: "#6b7280" }}>Верифицирован</span>
+                      </div>
+                    </div>
+                    <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", overflow: "hidden", padding: "8px" }}>
+                      {([
+                        { key: "dashboard", icon: "LayoutDashboard", label: "Обзор" },
+                        { key: "orders",    icon: "ArrowLeftRight",  label: "Платежи" },
+                        { key: "documents", icon: "FolderOpen",      label: "Документы" },
+                        { key: "messages",  icon: "MessageSquare",   label: "Сообщения", badge: 2 },
+                        { key: "rates",     icon: "TrendingUp",      label: "Курсы валют" },
+                        { key: "settings",  icon: "Settings",        label: "Настройки" },
+                      ] as Array<{ key: CabinetTab; icon: string; label: string; badge?: number }>).map(item => (
+                        <button key={item.key} onClick={() => setCabinetTab(item.key)} className={`sidebar-item ${cabinetTab === item.key ? "active" : ""}`}>
+                          <Icon name={item.icon as any} size={16} />
+                          <span>{item.label}</span>
+                          {item.badge && <span style={{ marginLeft: "auto", background: "#2563eb", color: "#fff", fontSize: "0.68rem", fontWeight: 700, padding: "1px 7px", borderRadius: 100, fontFamily: I }}>{item.badge}</span>}
+                        </button>
+                      ))}
+                      <div style={{ borderTop: "1px solid #f3f4f6", marginTop: 4, paddingTop: 4 }}>
+                        <button onClick={() => setIsLoggedIn(false)} className="sidebar-item" style={{ color: "#dc2626" }}>
+                          <Icon name="LogOut" size={16} /><span>Выйти</span>
+                        </button>
+                      </div>
+                    </div>
+                  </aside>
+
+                  {/* Main content */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+
+                    {cabinetTab === "dashboard" && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <h2 style={{ fontFamily: I, fontSize: "1.4rem", fontWeight: 800, color: "#111827" }}>Обзор</h2>
+                          <button onClick={() => nav("contacts")} className="btn-primary" style={{ padding: "8px 18px", fontSize: "0.82rem" }}>+ Новый платёж</button>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                          {[
+                            { icon: "ArrowLeftRight", label: "Всего платежей", val: "4",    sub: "за всё время", color: "#2563eb", bg: "#eff6ff" },
+                            { icon: "Clock",          label: "В процессе",     val: "2",    sub: "активных",    color: "#d97706", bg: "#fffbeb" },
+                            { icon: "CheckCircle",    label: "Исполнено",      val: "2",    sub: "успешных",    color: "#16a34a", bg: "#f0fdf4" },
+                            { icon: "DollarSign",     label: "Объём",          val: "$27.5k", sub: "всего",    color: "#7c3aed", bg: "#f5f3ff" },
+                          ].map((s, i) => (
+                            <div key={i} style={{ background: "#fff", borderRadius: 12, padding: "20px 18px", border: "1px solid #e5e7eb" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                                <div style={{ width: 32, height: 32, borderRadius: 8, background: s.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                  <Icon name={s.icon as any} size={15} style={{ color: s.color }} />
+                                </div>
+                                <span style={{ fontFamily: I, fontSize: "0.8rem", color: "#6b7280" }}>{s.label}</span>
+                              </div>
+                              <div style={{ fontFamily: I, fontSize: "1.8rem", fontWeight: 800, color: "#111827", letterSpacing: "-0.03em", lineHeight: 1 }}>{s.val}</div>
+                              <div style={{ fontFamily: I, fontSize: "0.72rem", color: "#9ca3af", marginTop: 4 }}>{s.sub}</div>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+                          <div style={{ padding: "16px 20px", borderBottom: "1px solid #f3f4f6", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <span style={{ fontFamily: I, fontWeight: 700, color: "#111827", fontSize: "0.95rem" }}>Последние платежи</span>
+                            <button onClick={() => setCabinetTab("orders")} style={{ fontFamily: I, fontSize: "0.82rem", color: "#2563eb", background: "none", border: "none", cursor: "pointer" }}>Все →</button>
+                          </div>
+                          {ORDERS_DATA.slice(0, 3).map((o, i) => (
+                            <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", gap: 12, borderBottom: i < 2 ? "1px solid #f9fafb" : "none" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                                <div style={{ width: 36, height: 36, borderRadius: 8, background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                  <Icon name="Globe" size={15} style={{ color: "#2563eb" }} />
+                                </div>
+                                <div style={{ minWidth: 0 }}>
+                                  <div style={{ fontFamily: I, fontWeight: 600, color: "#111827", fontSize: "0.875rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{o.country} · {o.service}</div>
+                                  <div style={{ fontFamily: I, fontSize: "0.75rem", color: "#9ca3af" }}>{o.id} · {o.date}</div>
+                                </div>
+                              </div>
+                              <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+                                <span style={{ fontFamily: I, fontWeight: 700, color: "#111827", fontSize: "0.9rem" }}>{o.amount}</span>
+                                <StatusBadge status={o.status} />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+                          <div style={{ padding: "16px 20px", borderBottom: "1px solid #f3f4f6", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <span style={{ fontFamily: I, fontWeight: 700, color: "#111827", fontSize: "0.95rem" }}>Новые сообщения</span>
+                            <button onClick={() => setCabinetTab("messages")} style={{ fontFamily: I, fontSize: "0.82rem", color: "#2563eb", background: "none", border: "none", cursor: "pointer" }}>Все →</button>
+                          </div>
+                          {MESSAGES_DATA.filter(m => m.unread).map((msg, i) => (
+                            <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "14px 20px", borderBottom: "1px solid #f9fafb" }}>
+                              <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg,#2563eb,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: I, fontWeight: 700, color: "#fff", fontSize: "0.9rem", flexShrink: 0 }}>{msg.from[0]}</div>
+                              <div>
+                                <div style={{ fontFamily: I, fontWeight: 600, color: "#111827", fontSize: "0.85rem" }}>{msg.from}</div>
+                                <p style={{ fontFamily: I, color: "#6b7280", fontSize: "0.82rem", lineHeight: 1.5, marginTop: 2 }}>{msg.text.slice(0, 100)}…</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {cabinetTab === "orders" && (
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+                          <h2 style={{ fontFamily: I, fontSize: "1.4rem", fontWeight: 800, color: "#111827" }}>Мои платежи</h2>
+                          <button onClick={() => nav("contacts")} className="btn-primary" style={{ padding: "8px 18px", fontSize: "0.82rem" }}>+ Новый платёж</button>
+                        </div>
+                        <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+                          <div style={{ overflowX: "auto" }}>
+                            <table className="data-table" style={{ width: "100%", borderCollapse: "collapse" }}>
+                              <thead><tr>{["ID","Услуга","Направление","Сумма","Менеджер","Дата","Статус"].map(h=><th key={h}>{h}</th>)}</tr></thead>
+                              <tbody>
+                                {ORDERS_DATA.map((o, i) => (
+                                  <tr key={i}>
+                                    <td style={{ color: "#2563eb", fontWeight: 600 }}>{o.id}</td>
+                                    <td>{o.service}</td>
+                                    <td style={{ whiteSpace: "nowrap" }}>{o.country}</td>
+                                    <td style={{ fontWeight: 700, color: "#111827", whiteSpace: "nowrap" }}>{o.amount}</td>
+                                    <td style={{ whiteSpace: "nowrap" }}>{o.manager}</td>
+                                    <td style={{ whiteSpace: "nowrap" }}>{o.date}</td>
+                                    <td><StatusBadge status={o.status} /></td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {cabinetTab === "documents" && (
+                      <div>
+                        <h2 style={{ fontFamily: I, fontSize: "1.4rem", fontWeight: 800, color: "#111827", marginBottom: 20 }}>Документы</h2>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                          {DOCS_DATA.map((doc, i) => (
+                            <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#fff", borderRadius: 10, padding: "14px 18px", border: "1px solid #e5e7eb" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                                <div style={{ width: 36, height: 36, borderRadius: 8, background: doc.type === "PDF" ? "#fef2f2" : "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                  <Icon name="FileText" size={16} style={{ color: doc.type === "PDF" ? "#dc2626" : "#2563eb" }} />
+                                </div>
+                                <div>
+                                  <div style={{ fontFamily: I, fontWeight: 500, color: "#111827", fontSize: "0.875rem" }}>{doc.name}</div>
+                                  <div style={{ fontFamily: I, fontSize: "0.72rem", color: "#9ca3af", marginTop: 2 }}>{doc.type} · {doc.size} · {doc.date}</div>
+                                </div>
+                              </div>
+                              <button style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: I, fontSize: "0.83rem", fontWeight: 600, color: "#2563eb", background: "none", border: "none", cursor: "pointer", flexShrink: 0 }}>
+                                <Icon name="Download" size={14} />Скачать
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {cabinetTab === "messages" && (
+                      <div>
+                        <h2 style={{ fontFamily: I, fontSize: "1.4rem", fontWeight: 800, color: "#111827", marginBottom: 20 }}>Сообщения</h2>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                          {MESSAGES_DATA.map((msg, i) => (
+                            <div key={i} style={{ background: "#fff", borderRadius: 12, padding: "18px 20px", border: msg.unread ? "1.5px solid #bfdbfe" : "1px solid #e5e7eb" }}>
+                              <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                                <div style={{ width: 40, height: 40, borderRadius: "50%", background: "linear-gradient(135deg,#2563eb,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: I, fontWeight: 700, color: "#fff", flexShrink: 0 }}>{msg.from[0]}</div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, marginBottom: 6 }}>
+                                    <span style={{ fontFamily: I, fontWeight: 700, color: "#111827", fontSize: "0.875rem" }}>{msg.from}</span>
+                                    <span style={{ fontFamily: I, fontSize: "0.75rem", color: "#9ca3af" }}>{msg.role}</span>
+                                    {msg.unread && <span style={{ marginLeft: "auto", background: "#2563eb", color: "#fff", fontSize: "0.68rem", fontWeight: 700, padding: "2px 8px", borderRadius: 100, fontFamily: I }}>Новое</span>}
+                                  </div>
+                                  <p style={{ fontFamily: I, color: "#4b5563", fontSize: "0.875rem", lineHeight: 1.65 }}>{msg.text}</p>
+                                  <div style={{ fontFamily: I, fontSize: "0.72rem", color: "#9ca3af", marginTop: 8 }}>{msg.time}</div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ background: "#fff", borderRadius: 12, padding: "18px 20px", border: "1px solid #e5e7eb", marginTop: 12 }}>
+                          <label className="form-label">Написать менеджеру</label>
+                          <textarea rows={3} className="form-input" style={{ resize: "none" } as any} placeholder="Напишите ваш вопрос..." />
+                          <button className="btn-primary" style={{ marginTop: 10, padding: "9px 20px", fontSize: "0.85rem" }}>Отправить</button>
+                        </div>
+                      </div>
+                    )}
+
+                    {cabinetTab === "rates" && (
+                      <div>
+                        <h2 style={{ fontFamily: I, fontSize: "1.4rem", fontWeight: 800, color: "#111827", marginBottom: 6 }}>Курсы валют</h2>
+                        <p style={{ fontFamily: I, color: "#6b7280", marginBottom: 20, fontSize: "0.875rem" }}>Обновляется каждые 5 минут · Спред ±1.5%</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                          {rLoading ? <div style={{ fontFamily: I, color: "#6b7280" }}>Загрузка...</div> : rates.map(r => (
+                            <div key={r.code} style={{ background: "#fff", borderRadius: 12, padding: "20px", border: "1px solid #e5e7eb" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+                                <span style={{ fontSize: "1.8rem" }}>{r.flag}</span>
+                                <div>
+                                  <div style={{ fontFamily: I, fontSize: "1.1rem", fontWeight: 800, color: "#111827" }}>{r.code}</div>
+                                  <div style={{ fontFamily: I, fontSize: "0.75rem", color: "#9ca3af" }}>{r.name}</div>
+                                </div>
+                                <span style={{ marginLeft: "auto", fontFamily: I, fontWeight: 600, fontSize: "0.875rem", color: r.change >= 0 ? "#16a34a" : "#dc2626" }}>
+                                  {r.change >= 0 ? "▲" : "▼"}{Math.abs(r.change).toFixed(2)}
+                                </span>
+                              </div>
+                              <div className="grid grid-cols-2 gap-3">
+                                <div style={{ background: "#f9fafb", borderRadius: 8, padding: "12px" }}>
+                                  <div style={{ fontFamily: I, fontSize: "0.68rem", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 4 }}>Покупка</div>
+                                  <div style={{ fontFamily: I, fontSize: "1.4rem", fontWeight: 800, color: "#111827", letterSpacing: "-0.02em" }}>{r.buy.toFixed(2)}</div>
+                                  <div style={{ fontFamily: I, fontSize: "0.72rem", color: "#9ca3af" }}>₽ за 1 {r.code}</div>
+                                </div>
+                                <div style={{ background: "#eff6ff", borderRadius: 8, padding: "12px" }}>
+                                  <div style={{ fontFamily: I, fontSize: "0.68rem", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 4 }}>Продажа</div>
+                                  <div style={{ fontFamily: I, fontSize: "1.4rem", fontWeight: 800, color: "#2563eb", letterSpacing: "-0.02em" }}>{r.sell.toFixed(2)}</div>
+                                  <div style={{ fontFamily: I, fontSize: "0.72rem", color: "#9ca3af" }}>₽ за 1 {r.code}</div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ background: "#fff", borderRadius: 12, padding: "20px 22px", border: "1px solid #e5e7eb" }}>
+                          <div style={{ fontFamily: I, fontWeight: 700, color: "#111827", marginBottom: 6, fontSize: "0.95rem" }}>Фиксация курса</div>
+                          <p style={{ fontFamily: I, color: "#6b7280", fontSize: "0.85rem", marginBottom: 14 }}>Зафиксируем курс на срок до 30 дней.</p>
+                          <button onClick={() => nav("contacts")} className="btn-primary" style={{ padding: "9px 22px", fontSize: "0.85rem" }}>Запросить фиксацию</button>
+                        </div>
+                      </div>
+                    )}
+
+                    {cabinetTab === "settings" && (
+                      <div>
+                        <h2 style={{ fontFamily: I, fontSize: "1.4rem", fontWeight: 800, color: "#111827", marginBottom: 20 }}>Настройки профиля</h2>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                          <div style={{ background: "#fff", borderRadius: 12, padding: "24px 22px", border: "1px solid #e5e7eb" }}>
+                            <div style={{ fontFamily: I, fontWeight: 700, color: "#111827", marginBottom: 18, fontSize: "0.95rem" }}>Данные компании</div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              {[{label:"Контактное лицо",val:"Пользователь"},{label:"Email",val:loginForm.email},{label:"Телефон",val:""},{label:"Компания",val:""},{label:"ИНН",val:""},{label:"КПП",val:""}].map((f,i)=>(
+                                <div key={i}>
+                                  <label className="form-label">{f.label}</label>
+                                  <input defaultValue={f.val} className="form-input" />
+                                </div>
+                              ))}
+                            </div>
+                            <button className="btn-primary" style={{ marginTop: 20, padding: "10px 24px" }}>Сохранить</button>
+                          </div>
+                          <div style={{ background: "#fff", borderRadius: 12, padding: "24px 22px", border: "1px solid #e5e7eb" }}>
+                            <div style={{ fontFamily: I, fontWeight: 700, color: "#111827", marginBottom: 18, fontSize: "0.95rem" }}>Уведомления</div>
+                            {[{label:"Email-уведомления об исполнении платежей",on:true},{label:"SMS при смене статуса заявки",on:true},{label:"Еженедельный отчёт по курсам валют",on:false}].map((n,i)=>(
+                              <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid #f3f4f6" }}>
+                                <span style={{ fontFamily: I, fontSize: "0.875rem", color: "#374151" }}>{n.label}</span>
+                                <div style={{ width: 40, height: 22, borderRadius: 100, background: n.on ? "#2563eb" : "#d1d5db", cursor: "pointer", display: "flex", alignItems: "center", padding: "0 3px" }}>
+                                  <div style={{ width: 16, height: 16, borderRadius: "50%", background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.2)", transform: n.on ? "translateX(18px)" : "translateX(0)", transition: "transform 0.2s" }} />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </>}
       </main>
 
-      {/* ── FOOTER ── */}
+      {/* ─── FOOTER ─── */}
       {section !== "cabinet" && (
-        <footer style={{ backgroundColor: "var(--navy)", borderTop: "1px solid rgba(200,168,75,0.15)" }}>
+        <footer style={{ background: "#111827", borderTop: "1px solid #1f2937" }}>
           <div className="container mx-auto px-6 py-12">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-8" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-8" style={{ borderBottom: "1px solid #1f2937" }}>
               <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 rounded-sm flex items-center justify-center" style={{ backgroundColor: "var(--gold)" }}>
-                    <Icon name="Globe" size={15} style={{ color: "var(--navy)" }} />
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 7, background: "linear-gradient(135deg,#2563eb,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Icon name="Globe" size={15} style={{ color: "#fff" }} />
                   </div>
-                  <span style={{ fontFamily: "Cormorant, serif", fontSize: "1.05rem", fontWeight: 700, color: "white" }}>ВЭД Агент Сервис</span>
+                  <span style={{ fontFamily: I, fontSize: "0.95rem", fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>ВЭД Агент Сервис</span>
                 </div>
-                <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.85rem", lineHeight: 1.7, fontFamily: "Golos Text, sans-serif" }}>Международные платежи и ВЭД-сопровождение для российского бизнеса.</p>
-                <div className="flex gap-3 mt-4">
-                  <a href="https://t.me/+74993985002" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded flex items-center justify-center" style={{ backgroundColor: "rgba(200,168,75,0.1)", border: "1px solid rgba(200,168,75,0.2)" }}>
-                    <Icon name="Send" size={14} style={{ color: "var(--gold)" }} />
-                  </a>
-                  <a href="https://wa.me/74993985002" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded flex items-center justify-center" style={{ backgroundColor: "rgba(200,168,75,0.1)", border: "1px solid rgba(200,168,75,0.2)" }}>
-                    <Icon name="MessageCircle" size={14} style={{ color: "var(--gold)" }} />
-                  </a>
+                <p style={{ fontFamily: I, color: "#6b7280", fontSize: "0.85rem", lineHeight: 1.7 }}>Международные платежи и ВЭД-сопровождение для российского бизнеса.</p>
+                <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
+                  {[{icon:"Send",href:"https://t.me/+74993985002"},{icon:"MessageCircle",href:"https://wa.me/74993985002"}].map((s,i)=>(
+                    <a key={i} href={s.href} target="_blank" rel="noopener noreferrer" style={{ width: 32, height: 32, borderRadius: 8, background: "#1f2937", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #374151" }}>
+                      <Icon name={s.icon as any} size={14} style={{ color: "#6b7280" }} />
+                    </a>
+                  ))}
                 </div>
               </div>
               {[
-                { title: "Услуги", links: ["Международные платежи", "Валютное регулирование", "FX операции", "Комплаенс и безопасность", "Криптовалютные операции"] },
-                { title: "Компания", links: ["О нас", "Блог", "FAQ", "Политика конфиденциальности", "Пользовательское соглашение"] },
-                { title: "Контакты", links: ["+7 (499) 398-50-02", "info@vedagentservice.ru", "Пресненская наб., 12, Москва", "Пн–Пт: 9:00–18:00"] },
+                { title: "Услуги", links: ["Международные платежи","Валютное регулирование","FX операции","Комплаенс и безопасность","Криптовалютные операции"] },
+                { title: "Компания", links: ["О нас","Блог","FAQ","Политика конфиденциальности","Пользовательское соглашение"] },
+                { title: "Контакты", links: ["+7 (499) 398-50-02","info@vedagentservice.ru","Пресненская наб., 12, Москва","Пн–Пт: 9:00–18:00"] },
               ].map((col, i) => (
                 <div key={i}>
-                  <h4 style={{ color: "var(--gold)", fontSize: "0.75rem", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "16px", fontFamily: "Golos Text, sans-serif", fontWeight: 600 }}>{col.title}</h4>
-                  <ul className="space-y-2">
+                  <h4 style={{ fontFamily: I, fontSize: "0.78rem", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#9ca3af", marginBottom: 14 }}>{col.title}</h4>
+                  <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 8 }}>
                     {col.links.map((link, j) => (
-                      <li key={j} style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.85rem", cursor: "pointer", fontFamily: "Golos Text, sans-serif" }}>{link}</li>
+                      <li key={j} style={{ fontFamily: I, color: "#6b7280", fontSize: "0.85rem", cursor: "pointer" }}
+                        onMouseEnter={e => ((e.target as HTMLElement).style.color = "#d1d5db")}
+                        onMouseLeave={e => ((e.target as HTMLElement).style.color = "#6b7280")}>
+                        {link}
+                      </li>
                     ))}
                   </ul>
                 </div>
               ))}
             </div>
-            <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.78rem", fontFamily: "Golos Text, sans-serif" }}>© 2024 ООО «ВЭД Агент Сервис». Все права защищены.</p>
-              <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.78rem", fontFamily: "Golos Text, sans-serif" }}>ИНН 7714123456 · ОГРН 1187746123456</p>
+            <div style={{ paddingTop: 24, display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+              <p style={{ fontFamily: I, color: "#4b5563", fontSize: "0.78rem" }}>© 2024 ООО «ВЭД Агент Сервис». Все права защищены.</p>
+              <p style={{ fontFamily: I, color: "#4b5563", fontSize: "0.78rem" }}>ИНН 7714123456 · ОГРН 1187746123456</p>
             </div>
           </div>
         </footer>
