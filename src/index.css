@@ -4,88 +4,53 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 210 20% 98%;
+    --foreground: 220 40% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 220 40% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 220 40% 10%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 220 55% 18%;
+    --primary-foreground: 45 80% 88%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 210 20% 94%;
+    --secondary-foreground: 220 40% 10%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 210 20% 94%;
+    --muted-foreground: 215 20% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 44 85% 50%;
+    --accent-foreground: 220 55% 12%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 214 20% 88%;
+    --input: 214 20% 88%;
+    --ring: 220 55% 18%;
 
-    --radius: 0.5rem;
+    --radius: 0.4rem;
+
+    /* Custom brand tokens */
+    --navy: #0f1f3d;
+    --navy-light: #1a3260;
+    --gold: #c8a84b;
+    --gold-light: #e2c97e;
+    --cream: #f8f5ee;
+    --text-dark: #0f1f3d;
+    --text-mid: #3d4e6b;
+    --text-light: #8496b0;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
@@ -97,5 +62,204 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: "Golos Text", sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
+
+  h1,
+  h2,
+  h3 {
+    font-family: "Cormorant", serif;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: "Cormorant", serif;
+  }
+  .font-body {
+    font-family: "Golos Text", sans-serif;
+  }
+
+  .text-gold {
+    color: var(--gold);
+  }
+  .bg-navy {
+    background-color: var(--navy);
+  }
+  .bg-navy-light {
+    background-color: var(--navy-light);
+  }
+  .bg-cream {
+    background-color: var(--cream);
+  }
+  .border-gold {
+    border-color: var(--gold);
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease-out forwards;
+  }
+  .animate-slide-up {
+    animation: slideUp 0.7s ease-out forwards;
+  }
+  .animate-fade-in-delay-1 {
+    animation: fadeIn 0.6s ease-out 0.15s forwards;
+    opacity: 0;
+  }
+  .animate-fade-in-delay-2 {
+    animation: fadeIn 0.6s ease-out 0.3s forwards;
+    opacity: 0;
+  }
+  .animate-fade-in-delay-3 {
+    animation: fadeIn 0.6s ease-out 0.45s forwards;
+    opacity: 0;
+  }
+
+  .gold-line::after {
+    content: "";
+    display: block;
+    width: 60px;
+    height: 3px;
+    background: var(--gold);
+    margin-top: 16px;
+  }
+
+  .gold-line-center::after {
+    content: "";
+    display: block;
+    width: 60px;
+    height: 3px;
+    background: var(--gold);
+    margin: 16px auto 0;
+  }
+
+  .hover-gold {
+    transition: color 0.2s ease;
+  }
+  .hover-gold:hover {
+    color: var(--gold);
+  }
+
+  .btn-primary {
+    background-color: var(--gold);
+    color: var(--navy);
+    font-weight: 600;
+    padding: 12px 32px;
+    border-radius: 3px;
+    transition: all 0.2s ease;
+    font-family: "Golos Text", sans-serif;
+    letter-spacing: 0.03em;
+    display: inline-block;
+  }
+  .btn-primary:hover {
+    background-color: var(--gold-light);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(200, 168, 75, 0.3);
+  }
+
+  .btn-outline {
+    border: 1.5px solid var(--gold);
+    color: var(--gold);
+    font-weight: 600;
+    padding: 11px 32px;
+    border-radius: 3px;
+    transition: all 0.2s ease;
+    font-family: "Golos Text", sans-serif;
+    letter-spacing: 0.03em;
+    display: inline-block;
+    background: transparent;
+  }
+  .btn-outline:hover {
+    background: rgba(200, 168, 75, 0.1);
+    transform: translateY(-1px);
+  }
+
+  .section-padding {
+    padding: 96px 0;
+  }
+
+  .card-service {
+    background: white;
+    border: 1px solid #e8ecf3;
+    border-radius: 6px;
+    padding: 36px 32px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .card-service::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 0;
+    background: var(--gold);
+    transition: height 0.3s ease;
+  }
+  .card-service:hover {
+    box-shadow: 0 12px 40px rgba(15, 31, 61, 0.1);
+    transform: translateY(-4px);
+    border-color: transparent;
+  }
+  .card-service:hover::before {
+    height: 100%;
+  }
+
+  .nav-link {
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 0.9rem;
+    letter-spacing: 0.04em;
+    transition: color 0.2s;
+    font-weight: 500;
+    text-transform: uppercase;
+    font-family: "Golos Text", sans-serif;
+    cursor: pointer;
+  }
+  .nav-link:hover,
+  .nav-link.active {
+    color: var(--gold);
+  }
+
+  .stat-number {
+    font-family: "Cormorant", serif;
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: var(--gold);
+    line-height: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 5px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--gold);
+  border-radius: 3px;
 }
