@@ -660,75 +660,86 @@ export default function Index() {
         <main style={{ paddingTop: 97 }}>
 
           {/* ─── HERO ─── */}
-          <section id="hero" style={{ background: "linear-gradient(160deg,#f0f7ff 0%,#e8f0fe 50%,#f5f3ff 100%)", minHeight: "82vh", display: "flex", flexDirection: "column", justifyContent: "center", position: "relative", overflow: "hidden" }}>
-            <div style={{ position: "absolute", top: -120, right: -80, width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle,rgba(37,99,235,0.07) 0%,transparent 70%)", pointerEvents: "none" }} />
-            <div style={{ position: "absolute", bottom: -60, left: "5%", width: 320, height: 320, borderRadius: "50%", background: "radial-gradient(circle,rgba(79,70,229,0.06) 0%,transparent 70%)", pointerEvents: "none" }} />
-            <div className="container mx-auto px-6 py-16 relative">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <section id="hero" style={{ position: "relative", minHeight: "88vh", display: "flex", flexDirection: "column", justifyContent: "center", overflow: "hidden" }}>
+            {/* Фоновая картинка */}
+            <img
+              src="https://cdn.poehali.dev/projects/bdb0b596-d990-4173-9987-44d3766a158a/files/5b19751e-6f30-4b4f-adf6-99b75b6a716b.jpg"
+              alt=""
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
+            />
+            {/* Оверлей — синий градиент */}
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(120deg, rgba(15,23,42,0.82) 0%, rgba(30,58,138,0.75) 45%, rgba(79,70,229,0.55) 100%)" }} />
+
+            {/* Контент поверх */}
+            <div className="container mx-auto px-6 py-20 relative" style={{ zIndex: 2 }}>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+
+                {/* Левая колонка — текст */}
                 <div className="animate-slide-up">
-                  <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 100, padding: "6px 16px", marginBottom: 28 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", boxShadow: "0 0 6px #22c55e" }} />
-                    <span style={{ fontFamily: I, fontSize: "0.78rem", fontWeight: 600, color: "#1e40af" }}>Профессиональный участник валютного рынка · с 2018 года</span>
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.22)", backdropFilter: "blur(8px)", borderRadius: 100, padding: "6px 16px", marginBottom: 28 }}>
+                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#4ade80", boxShadow: "0 0 6px #4ade80" }} />
+                    <span style={{ fontFamily: I, fontSize: "0.78rem", fontWeight: 600, color: "rgba(255,255,255,0.9)", letterSpacing: "0.04em" }}>Профессиональный участник валютного рынка · с 2018 года</span>
                   </div>
-                  <h1 style={{ fontFamily: I, fontSize: "clamp(2.2rem,4.5vw,3.4rem)", fontWeight: 800, color: "#0f172a", lineHeight: 1.12, letterSpacing: "-0.03em", marginBottom: 20 }}>
-                    Международные<br />платежи <span style={{ color: "#2563eb" }}>без ограничений</span>
+                  <h1 style={{ fontFamily: I, fontSize: "clamp(2.4rem,4.8vw,3.8rem)", fontWeight: 800, color: "#fff", lineHeight: 1.1, letterSpacing: "-0.03em", marginBottom: 22 }}>
+                    Международные<br />платежи{" "}
+                    <span style={{ background: "linear-gradient(90deg,#93c5fd,#a5b4fc)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>без ограничений</span>
                   </h1>
-                  <p style={{ fontFamily: I, fontSize: "1.05rem", color: "#475569", lineHeight: 1.75, maxWidth: 480, marginBottom: 36 }}>
+                  <p style={{ fontFamily: I, fontSize: "1.05rem", color: "rgba(255,255,255,0.75)", lineHeight: 1.75, maxWidth: 480, marginBottom: 36 }}>
                     Оплата инвойсов зарубежным поставщикам, FX‑операции и ВЭД‑сопровождение. 50+ стран, собственная инфраструктура, без санкционных ограничений.
                   </p>
                   <div className="flex flex-wrap gap-3">
-                    <button onClick={() => openSection("contacts")} className="btn-primary" style={{ padding: "13px 32px", fontSize: "0.92rem" }}>Получить расчёт <Icon name="ArrowRight" size={16} /></button>
-                    <button onClick={() => openSection("services")} className="btn-outline" style={{ padding: "12px 28px", fontSize: "0.92rem" }}>Наши услуги</button>
+                    <button onClick={() => openSection("contacts")} className="btn-white" style={{ padding: "13px 32px", fontSize: "0.92rem" }}>
+                      Получить расчёт <Icon name="ArrowRight" size={16} />
+                    </button>
+                    <button onClick={() => openSection("services")} className="btn-white-outline" style={{ padding: "12px 28px", fontSize: "0.92rem" }}>Наши услуги</button>
                   </div>
                   <div className="flex flex-wrap gap-2 mt-8">
                     {["ISO 27001","AML/KYC","ЦБ РФ 181-И","152-ФЗ"].map(b => (
-                      <span key={b} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "#fff", border: "1px solid #e2e8f0", borderRadius: 100, padding: "5px 14px", fontFamily: I, fontSize: "0.72rem", fontWeight: 600, color: "#475569", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
-                        <Icon name="ShieldCheck" size={11} style={{ color: "#2563eb" }} />{b}
+                      <span key={b} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", backdropFilter: "blur(6px)", borderRadius: 100, padding: "5px 14px", fontFamily: I, fontSize: "0.72rem", fontWeight: 600, color: "rgba(255,255,255,0.85)" }}>
+                        <Icon name="ShieldCheck" size={11} style={{ color: "#93c5fd" }} />{b}
                       </span>
                     ))}
                   </div>
                 </div>
+
+                {/* Правая колонка — курсы + статы */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", boxShadow: "0 8px 32px rgba(37,99,235,0.12)" }}>
-                    <img
-                      src="https://cdn.poehali.dev/projects/bdb0b596-d990-4173-9987-44d3766a158a/files/47842984-0afa-4cf9-ab42-c2e5d6f5b2d1.jpg"
-                      alt="Международные платежи"
-                      style={{ width: "100%", height: 220, objectFit: "cover", display: "block" }}
-                    />
-                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg,rgba(37,99,235,0.15) 0%,rgba(79,70,229,0.1) 100%)" }} />
-                    <div style={{ position: "absolute", bottom: 16, left: 16, right: 16, display: "flex", gap: 8 }}>
-                      {["50+ стран","от 0.5%","1–3 дня"].map((t, i) => (
-                        <span key={i} style={{ background: "rgba(255,255,255,0.92)", backdropFilter: "blur(8px)", borderRadius: 100, padding: "5px 12px", fontFamily: I, fontSize: "0.72rem", fontWeight: 700, color: "#1e40af" }}>{t}</span>
-                      ))}
-                    </div>
-                  </div>
-                  <div style={{ background: "#fff", borderRadius: 16, padding: "20px 24px", boxShadow: "0 4px 24px rgba(37,99,235,0.08)", border: "1px solid #e2e8f0" }}>
+                  {/* Карточка курсов */}
+                  <div style={{ background: "rgba(255,255,255,0.1)", backdropFilter: "blur(16px)", borderRadius: 16, padding: "20px 24px", border: "1px solid rgba(255,255,255,0.18)" }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-                      <span style={{ fontFamily: I, fontWeight: 700, color: "#0f172a", fontSize: "0.9rem" }}>Курсы валют</span>
-                      <span style={{ fontFamily: I, fontSize: "0.7rem", color: "#94a3b8" }}>обновляется каждые 5 мин</span>
+                      <span style={{ fontFamily: I, fontWeight: 700, color: "#fff", fontSize: "0.9rem" }}>Курсы валют</span>
+                      <span style={{ fontFamily: I, fontSize: "0.7rem", color: "rgba(255,255,255,0.5)" }}>обновляется каждые 5 мин</span>
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                       {(rLoading ? CURRENCIES.map(c => ({ code: c.code, name: c.name, flag: c.flag, buy: c.buyFallback, sell: c.sellFallback, change: 0 })) : rates).map(r => (
-                        <div key={r.code} style={{ background: "#f8fafc", borderRadius: 10, padding: "12px 14px", border: "1px solid #f1f5f9" }}>
+                        <div key={r.code} style={{ background: "rgba(255,255,255,0.08)", borderRadius: 10, padding: "12px 14px", border: "1px solid rgba(255,255,255,0.12)" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
                             <span style={{ fontSize: "1.1rem" }}>{r.flag}</span>
-                            <span style={{ fontFamily: I, fontWeight: 700, color: "#0f172a", fontSize: "0.85rem" }}>{r.code}</span>
-                            <span style={{ marginLeft: "auto", fontFamily: I, fontSize: "0.68rem", fontWeight: 600, color: r.change >= 0 ? "#16a34a" : "#dc2626" }}>{r.change >= 0 ? "▲" : "▼"}{Math.abs(r.change).toFixed(2)}</span>
+                            <span style={{ fontFamily: I, fontWeight: 700, color: "#fff", fontSize: "0.85rem" }}>{r.code}</span>
+                            <span style={{ marginLeft: "auto", fontFamily: I, fontSize: "0.68rem", fontWeight: 600, color: r.change >= 0 ? "#4ade80" : "#f87171" }}>{r.change >= 0 ? "▲" : "▼"}{Math.abs(r.change).toFixed(2)}</span>
                           </div>
                           <div style={{ display: "flex", gap: 8 }}>
-                            <div><div style={{ fontFamily: I, fontSize: "0.62rem", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em" }}>покупка</div><div style={{ fontFamily: I, fontWeight: 700, color: "#1e40af", fontSize: "0.9rem" }}>{r.buy.toFixed(2)}</div></div>
-                            <div style={{ width: 1, background: "#e2e8f0", margin: "2px 0" }} />
-                            <div><div style={{ fontFamily: I, fontSize: "0.62rem", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em" }}>продажа</div><div style={{ fontFamily: I, fontWeight: 700, color: "#0f172a", fontSize: "0.9rem" }}>{r.sell.toFixed(2)}</div></div>
+                            <div>
+                              <div style={{ fontFamily: I, fontSize: "0.62rem", color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.06em" }}>покупка</div>
+                              <div style={{ fontFamily: I, fontWeight: 700, color: "#93c5fd", fontSize: "0.9rem" }}>{r.buy.toFixed(2)}</div>
+                            </div>
+                            <div style={{ width: 1, background: "rgba(255,255,255,0.15)", margin: "2px 0" }} />
+                            <div>
+                              <div style={{ fontFamily: I, fontSize: "0.62rem", color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.06em" }}>продажа</div>
+                              <div style={{ fontFamily: I, fontWeight: 700, color: "#fff", fontSize: "0.9rem" }}>{r.sell.toFixed(2)}</div>
+                            </div>
                           </div>
                         </div>
                       ))}
                     </div>
                   </div>
+
+                  {/* Статистика */}
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10 }}>
                     {[{n:"50+",l:"стран"},{n:"500k+",l:"операций"},{n:"99.8%",l:"успешность"},{n:"2018",l:"год осн."}].map((s, i) => (
-                      <div key={i} style={{ background: "#fff", borderRadius: 12, padding: "14px 10px", textAlign: "center", border: "1px solid #e2e8f0", boxShadow: "0 1px 6px rgba(0,0,0,0.04)" }}>
-                        <div style={{ fontFamily: I, fontSize: "1.25rem", fontWeight: 800, color: "#2563eb", letterSpacing: "-0.02em", lineHeight: 1 }}>{s.n}</div>
-                        <div style={{ fontFamily: I, fontSize: "0.62rem", color: "#94a3b8", marginTop: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>{s.l}</div>
+                      <div key={i} style={{ background: "rgba(255,255,255,0.1)", backdropFilter: "blur(10px)", borderRadius: 12, padding: "14px 10px", textAlign: "center", border: "1px solid rgba(255,255,255,0.15)" }}>
+                        <div style={{ fontFamily: I, fontSize: "1.2rem", fontWeight: 800, color: "#fff", letterSpacing: "-0.02em", lineHeight: 1 }}>{s.n}</div>
+                        <div style={{ fontFamily: I, fontSize: "0.6rem", color: "rgba(255,255,255,0.55)", marginTop: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>{s.l}</div>
                       </div>
                     ))}
                   </div>
@@ -761,7 +772,7 @@ export default function Index() {
                   </div>
                 </div>
                 <div>
-                  <img src="https://cdn.poehali.dev/projects/bdb0b596-d990-4173-9987-44d3766a158a/files/92e08838-2434-4590-a7eb-4b542e4f9b9d.jpg" alt="Команда ВЭД Агент Сервис" style={{ width: "100%", height: 340, objectFit: "cover", borderRadius: 16, boxShadow: "0 8px 32px rgba(37,99,235,0.1)" }} />
+                  <img src="https://cdn.poehali.dev/projects/bdb0b596-d990-4173-9987-44d3766a158a/files/d793b5de-291a-4218-8af6-74901298deb8.jpg" alt="ВЭД Агент Сервис — офис" style={{ width: "100%", height: 340, objectFit: "cover", borderRadius: 16, boxShadow: "0 8px 32px rgba(37,99,235,0.1)" }} />
                   <div style={{ marginTop: 20, padding: "18px 24px", borderRadius: 12, background: "#eff6ff", border: "1px solid #bfdbfe" }}>
                     <p style={{ fontFamily: I, fontSize: "0.95rem", color: "#1e40af", lineHeight: 1.65, fontStyle: "italic", fontWeight: 500 }}>«Наша миссия — помочь российскому бизнесу работать с зарубежными партнёрами легально, безопасно и без лишних сложностей»</p>
                   </div>
