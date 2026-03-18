@@ -689,6 +689,19 @@ export default function Index() {
                   </div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", boxShadow: "0 8px 32px rgba(37,99,235,0.12)" }}>
+                    <img
+                      src="https://cdn.poehali.dev/projects/bdb0b596-d990-4173-9987-44d3766a158a/files/47842984-0afa-4cf9-ab42-c2e5d6f5b2d1.jpg"
+                      alt="Международные платежи"
+                      style={{ width: "100%", height: 220, objectFit: "cover", display: "block" }}
+                    />
+                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg,rgba(37,99,235,0.15) 0%,rgba(79,70,229,0.1) 100%)" }} />
+                    <div style={{ position: "absolute", bottom: 16, left: 16, right: 16, display: "flex", gap: 8 }}>
+                      {["50+ стран","от 0.5%","1–3 дня"].map((t, i) => (
+                        <span key={i} style={{ background: "rgba(255,255,255,0.92)", backdropFilter: "blur(8px)", borderRadius: 100, padding: "5px 12px", fontFamily: I, fontSize: "0.72rem", fontWeight: 700, color: "#1e40af" }}>{t}</span>
+                      ))}
+                    </div>
+                  </div>
                   <div style={{ background: "#fff", borderRadius: 16, padding: "20px 24px", boxShadow: "0 4px 24px rgba(37,99,235,0.08)", border: "1px solid #e2e8f0" }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
                       <span style={{ fontFamily: I, fontWeight: 700, color: "#0f172a", fontSize: "0.9rem" }}>Курсы валют</span>
@@ -748,7 +761,7 @@ export default function Index() {
                   </div>
                 </div>
                 <div>
-                  <img src="https://cdn.poehali.dev/projects/bdb0b596-d990-4173-9987-44d3766a158a/files/d16a817d-c941-448a-8da7-9acc2b9dfd77.jpg" alt="О компании" style={{ width: "100%", height: 340, objectFit: "cover", borderRadius: 16, boxShadow: "0 8px 32px rgba(37,99,235,0.1)" }} />
+                  <img src="https://cdn.poehali.dev/projects/bdb0b596-d990-4173-9987-44d3766a158a/files/92e08838-2434-4590-a7eb-4b542e4f9b9d.jpg" alt="Команда ВЭД Агент Сервис" style={{ width: "100%", height: 340, objectFit: "cover", borderRadius: 16, boxShadow: "0 8px 32px rgba(37,99,235,0.1)" }} />
                   <div style={{ marginTop: 20, padding: "18px 24px", borderRadius: 12, background: "#eff6ff", border: "1px solid #bfdbfe" }}>
                     <p style={{ fontFamily: I, fontSize: "0.95rem", color: "#1e40af", lineHeight: 1.65, fontStyle: "italic", fontWeight: 500 }}>«Наша миссия — помочь российскому бизнесу работать с зарубежными партнёрами легально, безопасно и без лишних сложностей»</p>
                   </div>
