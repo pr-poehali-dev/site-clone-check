@@ -423,6 +423,46 @@
     animation: slideUp 0.6s ease-out forwards;
   }
 
+  /* ── Scroll-reveal ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(32px);
+    transition:
+      opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal.reveal-left {
+    transform: translateX(-32px);
+  }
+  .reveal.reveal-right {
+    transform: translateX(32px);
+  }
+  .reveal.reveal-scale {
+    transform: scale(0.93);
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: none;
+  }
+  .reveal-delay-1 {
+    transition-delay: 0.1s;
+  }
+  .reveal-delay-2 {
+    transition-delay: 0.18s;
+  }
+  .reveal-delay-3 {
+    transition-delay: 0.26s;
+  }
+  .reveal-delay-4 {
+    transition-delay: 0.34s;
+  }
+  .reveal-delay-5 {
+    transition-delay: 0.42s;
+  }
+  .reveal-delay-6 {
+    transition-delay: 0.5s;
+  }
+
   /* ── Form inputs ── */
   .form-input {
     width: 100%;

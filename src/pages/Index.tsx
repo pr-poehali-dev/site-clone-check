@@ -2,6 +2,27 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Icon from "@/components/ui/icon";
 
+// ── Scroll-reveal hook ────────────────────────────────────────────────────
+function useReveal() {
+  useEffect(() => {
+    const els = document.querySelectorAll(".reveal");
+    if (!els.length) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
+    );
+    els.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  });
+}
+
 // ── API ───────────────────────────────────────────────────────────────────
 const AUTH_URL = "https://functions.poehali.dev/7c289e46-e8a8-4c96-99ad-263a6455d72f";
 const DATA_URL = "https://functions.poehali.dev/3aad21f0-3c3d-4a2c-acf4-724687d855f1";
@@ -220,6 +241,9 @@ export default function Index() {
     window.addEventListener("scroll", handler, { passive: true });
     return () => window.removeEventListener("scroll", handler);
   }, []);
+
+  // Scroll-reveal
+  useReveal();
 
   // Handlers
   const handleLogin = async (e: React.FormEvent) => {
@@ -751,12 +775,12 @@ export default function Index() {
           {/* ─── ABOUT ─── */}
           <section id="about" style={{ background: "#fff" }} className="section-padding">
             <div className="container mx-auto px-6">
-              <div style={{ textAlign: "center", marginBottom: 52 }}>
+              <div className="reveal" style={{ textAlign: "center", marginBottom: 52 }}>
                 <div className="section-label" style={{ justifyContent: "center" }}>Кто мы</div>
                 <h2 style={{ fontFamily: I, fontSize: "clamp(1.8rem,3.5vw,2.5rem)", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.025em" }}>О компании</h2>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-                <div>
+                <div className="reveal reveal-left">
                   <h3 style={{ fontFamily: I, fontSize: "1.5rem", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.02em", lineHeight: 1.25, marginBottom: 16 }}>Специализированный провайдер международных платёжных сервисов</h3>
                   {["ВЭД Агент Сервис работает с 2018 года. Провели более 500 000 операций на сумму свыше $1,5 млрд. Специализируемся на международных платёжных и ВЭД-сервисах для российского бизнеса.",
                     "Ключевое преимущество — собственная инфраструктура: 30+ юридических лиц в банках разных юрисдикций. Проводим платежи туда, куда крупные банки отказывают из-за санкций.",
@@ -771,7 +795,7 @@ export default function Index() {
                     ))}
                   </div>
                 </div>
-                <div>
+                <div className="reveal reveal-right">
                   <img src="https://cdn.poehali.dev/projects/bdb0b596-d990-4173-9987-44d3766a158a/files/d793b5de-291a-4218-8af6-74901298deb8.jpg" alt="ВЭД Агент Сервис — офис" style={{ width: "100%", height: 340, objectFit: "cover", borderRadius: 16, boxShadow: "0 8px 32px rgba(37,99,235,0.1)" }} />
                   <div style={{ marginTop: 20, padding: "18px 24px", borderRadius: 12, background: "#eff6ff", border: "1px solid #bfdbfe" }}>
                     <p style={{ fontFamily: I, fontSize: "0.95rem", color: "#1e40af", lineHeight: 1.65, fontStyle: "italic", fontWeight: 500 }}>«Наша миссия — помочь российскому бизнесу работать с зарубежными партнёрами легально, безопасно и без лишних сложностей»</p>
@@ -780,7 +804,7 @@ export default function Index() {
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mt-16">
                 {[{n:"2018",l:"год основания"},{n:"500k+",l:"операций"},{n:"50+",l:"стран"},{n:"30+",l:"банков-партнёров"}].map((s, i) => (
-                  <div key={i} className="card-stat" style={{ textAlign: "center" }}>
+                  <div key={i} className={`card-stat reveal reveal-delay-${i + 1}`} style={{ textAlign: "center" }}>
                     <div className="stat-number">{s.n}</div>
                     <div style={{ fontFamily: I, color: "#64748b", fontSize: "0.8rem", marginTop: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>{s.l}</div>
                   </div>
@@ -792,14 +816,14 @@ export default function Index() {
           {/* ─── SERVICES ─── */}
           <section id="services" style={{ background: "#f8fafc" }} className="section-padding">
             <div className="container mx-auto px-6">
-              <div style={{ textAlign: "center", marginBottom: 52 }}>
+              <div className="reveal" style={{ textAlign: "center", marginBottom: 52 }}>
                 <div className="section-label" style={{ justifyContent: "center" }}>Что мы предлагаем</div>
                 <h2 style={{ fontFamily: I, fontSize: "clamp(1.8rem,3.5vw,2.5rem)", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.025em" }}>Услуги</h2>
                 <p style={{ fontFamily: I, color: "#64748b", marginTop: 12, maxWidth: 520, margin: "12px auto 0", lineHeight: 1.7 }}>Полный спектр сервисов для безопасных международных расчётов и ВЭД-сопровождения</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {SERVICES.map((s, i) => (
-                  <div key={i} className="card-service" style={{ background: "#fff" }}>
+                  <div key={i} className={`card-service reveal reveal-delay-${(i % 3) + 1}`} style={{ background: "#fff" }}>
                     <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 18 }}>
                       <div style={{ width: 48, height: 48, borderRadius: 12, background: "linear-gradient(135deg,#eff6ff,#eef2ff)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name={s.icon as any} size={22} style={{ color: "#2563eb" }} /></div>
                       <span className="badge-blue">{s.price}</span>
@@ -816,14 +840,14 @@ export default function Index() {
           {/* ─── PORTFOLIO ─── */}
           <section id="portfolio" style={{ background: "#fff" }} className="section-padding">
             <div className="container mx-auto px-6">
-              <div style={{ textAlign: "center", marginBottom: 52 }}>
+              <div className="reveal" style={{ textAlign: "center", marginBottom: 52 }}>
                 <div className="section-label" style={{ justifyContent: "center" }}>Наш опыт</div>
                 <h2 style={{ fontFamily: I, fontSize: "clamp(1.8rem,3.5vw,2.5rem)", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.025em" }}>Кейсы</h2>
                 <p style={{ fontFamily: I, color: "#64748b", marginTop: 12, maxWidth: 520, margin: "12px auto 0", lineHeight: 1.7 }}>Реальные задачи, которые мы уже решили для российского бизнеса</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {PORTFOLIO.map((p, i) => (
-                  <div key={i} style={{ background: "#fff", borderRadius: 12, border: "1px solid #e2e8f0", overflow: "hidden", transition: "all 0.2s" }}
+                  <div key={i} className={`reveal reveal-delay-${(i % 3) + 1}`} style={{ background: "#fff", borderRadius: 12, border: "1px solid #e2e8f0", overflow: "hidden", transition: "all 0.2s" }}
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = "0 8px 32px rgba(37,99,235,0.1)"; (e.currentTarget as HTMLElement).style.transform = "translateY(-3px)"; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = "none"; (e.currentTarget as HTMLElement).style.transform = "none"; }}>
                     <div style={{ height: 4, background: "linear-gradient(90deg,#2563eb,#4f46e5)" }} />
@@ -851,7 +875,7 @@ export default function Index() {
           {/* ─── PROCESS ─── */}
           <section style={{ background: "#f8fafc" }} className="section-padding">
             <div className="container mx-auto px-6">
-              <div style={{ textAlign: "center", marginBottom: 48 }}>
+              <div className="reveal" style={{ textAlign: "center", marginBottom: 48 }}>
                 <div className="section-label" style={{ justifyContent: "center" }}>Как работаем</div>
                 <h2 style={{ fontFamily: I, fontSize: "clamp(1.6rem,3vw,2.2rem)", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.025em" }}>Четыре шага до платежа</h2>
               </div>
@@ -862,7 +886,7 @@ export default function Index() {
                   { n: "03", title: "Договор",          desc: "Согласуем условия, комиссию и сроки." },
                   { n: "04", title: "Исполнение",       desc: "1–3 рабочих дня. SWIFT-подтверждение в кабинете." },
                 ].map((s, i) => (
-                  <div key={i} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 14, padding: "28px 22px", position: "relative", overflow: "hidden" }}>
+                  <div key={i} className={`reveal reveal-delay-${i + 1}`} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 14, padding: "28px 22px", position: "relative", overflow: "hidden" }}>
                     <div style={{ position: "absolute", top: 16, right: 18, fontFamily: I, fontSize: "3rem", fontWeight: 800, color: "#f1f5f9", letterSpacing: "-0.04em", lineHeight: 1 }}>{s.n}</div>
                     <div style={{ width: 36, height: 36, borderRadius: 9, background: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
                       <span style={{ fontFamily: I, fontWeight: 800, color: "#fff", fontSize: "0.85rem" }}>{s.n}</span>
@@ -878,14 +902,14 @@ export default function Index() {
           {/* ─── BLOG ─── */}
           <section id="blog" style={{ background: "#fff" }} className="section-padding">
             <div className="container mx-auto px-6">
-              <div style={{ textAlign: "center", marginBottom: 52 }}>
+              <div className="reveal" style={{ textAlign: "center", marginBottom: 52 }}>
                 <div className="section-label" style={{ justifyContent: "center" }}>Экспертиза</div>
                 <h2 style={{ fontFamily: I, fontSize: "clamp(1.8rem,3.5vw,2.5rem)", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.025em" }}>Блог</h2>
                 <p style={{ fontFamily: I, color: "#64748b", marginTop: 12, maxWidth: 520, margin: "12px auto 0", lineHeight: 1.7 }}>Актуальные материалы о валютном регулировании и международных расчётах</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {BLOG_ITEMS.map((b, i) => (
-                  <div key={i} style={{ background: "#fff", borderRadius: 12, border: "1px solid #e2e8f0", overflow: "hidden", cursor: "pointer", transition: "all 0.2s" }}
+                  <div key={i} className={`reveal reveal-delay-${i + 1}`} style={{ background: "#fff", borderRadius: 12, border: "1px solid #e2e8f0", overflow: "hidden", cursor: "pointer", transition: "all 0.2s" }}
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = "0 8px 32px rgba(37,99,235,0.1)"; (e.currentTarget as HTMLElement).style.transform = "translateY(-3px)"; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = "none"; (e.currentTarget as HTMLElement).style.transform = "none"; }}>
                     <div style={{ height: 4, background: "linear-gradient(90deg,#2563eb,#4f46e5)" }} />
@@ -907,13 +931,13 @@ export default function Index() {
           {/* ─── FAQ ─── */}
           <section id="faq" style={{ background: "#f8fafc" }} className="section-padding">
             <div className="container mx-auto px-6" style={{ maxWidth: 780 }}>
-              <div style={{ textAlign: "center", marginBottom: 48 }}>
+              <div className="reveal" style={{ textAlign: "center", marginBottom: 48 }}>
                 <div className="section-label" style={{ justifyContent: "center" }}>Вопросы и ответы</div>
                 <h2 style={{ fontFamily: I, fontSize: "clamp(1.8rem,3.5vw,2.5rem)", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.025em" }}>FAQ</h2>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {FAQ_ITEMS.map((item, i) => (
-                  <div key={i} style={{ background: "#fff", borderRadius: 10, border: `1px solid ${faqOpen === i ? "#bfdbfe" : "#e2e8f0"}`, overflow: "hidden", transition: "border-color 0.15s" }}>
+                  <div key={i} className={`reveal reveal-delay-${Math.min(i + 1, 6)}`} style={{ background: "#fff", borderRadius: 10, border: `1px solid ${faqOpen === i ? "#bfdbfe" : "#e2e8f0"}`, overflow: "hidden", transition: "border-color 0.15s, opacity 0.65s, transform 0.65s" }}>
                     <button onClick={() => setFaqOpen(faqOpen === i ? null : i)} style={{ width: "100%", textAlign: "left", padding: "18px 22px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, background: "none", border: "none", cursor: "pointer" }}>
                       <span style={{ fontFamily: I, fontWeight: 600, color: "#0f172a", fontSize: "0.95rem" }}>{item.q}</span>
                       <Icon name={faqOpen === i ? "ChevronUp" : "ChevronDown"} size={18} style={{ color: "#2563eb", flexShrink: 0 }} />
@@ -932,14 +956,14 @@ export default function Index() {
           {/* ─── CONTACTS ─── */}
           <section id="contacts" style={{ background: "#fff" }} className="section-padding">
             <div className="container mx-auto px-6">
-              <div style={{ textAlign: "center", marginBottom: 52 }}>
+              <div className="reveal" style={{ textAlign: "center", marginBottom: 52 }}>
                 <div className="section-label" style={{ justifyContent: "center" }}>Свяжитесь с нами</div>
                 <h2 style={{ fontFamily: I, fontSize: "clamp(1.8rem,3.5vw,2.5rem)", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.025em" }}>Контакты</h2>
                 <p style={{ fontFamily: I, color: "#64748b", marginTop: 12, maxWidth: 480, margin: "12px auto 0", lineHeight: 1.7 }}>Ответим в течение 30 минут в рабочее время</p>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 {/* Form */}
-                <div style={{ background: "#fff", borderRadius: 16, padding: "36px", border: "1px solid #e2e8f0", boxShadow: "0 4px 24px rgba(37,99,235,0.06)" }}>
+                <div className="reveal reveal-left" style={{ background: "#fff", borderRadius: 16, padding: "36px", border: "1px solid #e2e8f0", boxShadow: "0 4px 24px rgba(37,99,235,0.06)" }}>
                   <h3 style={{ fontFamily: I, fontSize: "1.2rem", fontWeight: 800, color: "#0f172a", marginBottom: 6 }}>Оставить заявку</h3>
                   <p style={{ fontFamily: I, color: "#64748b", marginBottom: 24, fontSize: "0.875rem" }}>Расчёт комиссии и сроков бесплатно</p>
                   {contactSent ? (
@@ -972,7 +996,7 @@ export default function Index() {
                   )}
                 </div>
                 {/* Info */}
-                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <div className="reveal reveal-right" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {[{icon:"MapPin",title:"Адрес",val:"123112, Москва, Пресненская наб., 12"},{icon:"Phone",title:"Телефон",val:"+7 (499) 398-50-02"},{icon:"Mail",title:"Email",val:"info@vedagentservice.ru"},{icon:"Clock",title:"Режим работы",val:"Пн–Пт: 9:00–18:00 (МСК)"}].map((c, i) => (
                     <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 14, padding: "16px 18px", background: "#f8fafc", borderRadius: 10, border: "1px solid #e2e8f0" }}>
                       <div style={{ width: 40, height: 40, borderRadius: 10, background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name={c.icon as any} size={18} style={{ color: "#2563eb" }} /></div>
