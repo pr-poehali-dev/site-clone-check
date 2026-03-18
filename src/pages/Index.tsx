@@ -410,6 +410,14 @@ export default function Index() {
                 {isLoggedIn ? "Кабинет" : "Войти"}
                 {unreadCount > 0 && isLoggedIn && <span style={{ position: "absolute", top: -4, right: -4, width: 16, height: 16, borderRadius: "50%", background: "#2563eb", color: "#fff", fontSize: "0.6rem", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{unreadCount}</span>}
               </button>
+              {isLoggedIn && (
+                <button onClick={handleLogout} title="Выйти из аккаунта"
+                  style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, borderRadius: 8, border: "1.5px solid #fecaca", background: "#fff", cursor: "pointer", flexShrink: 0, transition: "all 0.15s" }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#fef2f2"; (e.currentTarget as HTMLElement).style.borderColor = "#f87171"; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "#fff"; (e.currentTarget as HTMLElement).style.borderColor = "#fecaca"; }}>
+                  <Icon name="LogOut" size={15} style={{ color: "#ef4444" }} />
+                </button>
+              )}
               <button className="lg:hidden p-2" onClick={() => setMobileOpen(!mobileOpen)} style={{ background: "none", border: "none", cursor: "pointer" }}>
                 <Icon name={mobileOpen ? "X" : "Menu"} size={22} style={{ color: "#374151" }} />
               </button>
@@ -424,7 +432,14 @@ export default function Index() {
             ))}
             <div className="flex gap-2 mt-4">
               <button onClick={() => openSection("contacts")} className="btn-primary flex-1 justify-center" style={{ padding: "10px 0", fontSize: "0.875rem" }}>Консультация</button>
-              <button onClick={() => { setShowCabinet(true); setMobileOpen(false); window.scrollTo({ top: 0 }); }} className="btn-outline flex-1 justify-center" style={{ padding: "10px 0", fontSize: "0.875rem" }}>{isLoggedIn ? "Кабинет" : "Войти"}</button>
+              <button onClick={() => { setShowCabinet(true); setMobileOpen(false); window.scrollTo({ top: 0 }); }} className="btn-outline flex-1 justify-center" style={{ padding: "10px 0", fontSize: "0.875rem" }}>
+                <Icon name="User" size={14} />{isLoggedIn ? "Кабинет" : "Войти"}
+              </button>
+              {isLoggedIn && (
+                <button onClick={() => { handleLogout(); setMobileOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 14px", borderRadius: 8, border: "1.5px solid #fecaca", background: "#fff", fontFamily: I, fontSize: "0.875rem", fontWeight: 500, color: "#ef4444", cursor: "pointer" }}>
+                  <Icon name="LogOut" size={14} />Выйти
+                </button>
+              )}
             </div>
           </div>
         )}
