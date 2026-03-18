@@ -2,6 +2,15 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Icon from "@/components/ui/icon";
 
+// ── Admin API ─────────────────────────────────────────────────────────────
+const ADMIN_URL = "https://functions.poehali.dev/f758ecae-a645-410a-8cfa-84490d910c0e";
+async function apiAdmin(action: string, body: object = {}, token?: string) {
+  const h: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) h["X-Auth-Token"] = token;
+  const res = await fetch(ADMIN_URL, { method: "POST", headers: h, body: JSON.stringify({ action, ...body }) });
+  return res.json();
+}
+
 // ── Scroll-reveal hook ────────────────────────────────────────────────────
 function useReveal() {
   useEffect(() => {
@@ -175,6 +184,25 @@ export default function Index() {
   const [newMsg, setNewMsg]             = useState("");
   const [msgSending, setMsgSending]     = useState(false);
 
+  // ── Admin state ──
+  type AdminTab = "stats" | "users" | "orders" | "user_detail";
+  const [adminTab, setAdminTab]             = useState<AdminTab>("stats");
+  const [adminStats, setAdminStats]         = useState<any>(null);
+  const [adminUsers, setAdminUsers]         = useState<any[]>([]);
+  const [adminOrders, setAdminOrders]       = useState<any[]>([]);
+  const [adminLoading, setAdminLoading]     = useState(false);
+  const [selectedUser, setSelectedUser]     = useState<any>(null);
+  const [selectedUserOrders, setSelectedUserOrders] = useState<any[]>([]);
+  const [selectedUserDocs, setSelectedUserDocs]     = useState<any[]>([]);
+  const [adminMsg, setAdminMsg]             = useState("");
+  const [adminMsgSending, setAdminMsgSending] = useState(false);
+  const [orderEditId, setOrderEditId]       = useState<number | null>(null);
+  const [orderEditForm, setOrderEditForm]   = useState({ status: "", manager: "", comment: "" });
+  const [newOrderForm, setNewOrderForm]     = useState({ user_id: "", service: "Международный платёж", country: "", amount: "", currency: "USD", manager: "" });
+  const [newDocForm, setNewDocForm]         = useState({ user_id: "", name: "", file_type: "PDF", file_size: "" });
+  const [adminActionMsg, setAdminActionMsg] = useState("");
+
+  const isAdmin = !!(cabinetUser as any)?.is_admin;
   const isLoggedIn = !!cabinetUser;
   const unreadCount = messages.filter(m => !m.is_read && !m.is_from_user).length;
 
@@ -199,6 +227,31 @@ export default function Index() {
       kpp: cabinetUser.kpp || "",
     });
   }, [cabinetUser]);
+
+  // Load admin data
+  const loadAdminData = useCallback(async (tab: AdminTab, uid?: number) => {
+    if (!token) return;
+    setAdminLoading(true);
+    try {
+      if (tab === "stats") {
+        const d = await apiAdmin("stats", {}, token);
+        if (d.total_users !== undefined) setAdminStats(d);
+      } else if (tab === "users") {
+        const d = await apiAdmin("users", {}, token);
+        if (d.users) setAdminUsers(d.users);
+      } else if (tab === "orders") {
+        const d = await apiAdmin("orders", {}, token);
+        if (d.orders) setAdminOrders(d.orders);
+      } else if (tab === "user_detail" && uid) {
+        const d = await apiAdmin("user_detail", { user_id: uid }, token);
+        if (d.user) { setSelectedUser(d.user); setSelectedUserOrders(d.orders || []); setSelectedUserDocs(d.documents || []); }
+      }
+    } finally { setAdminLoading(false); }
+  }, [token]);
+
+  useEffect(() => {
+    if (isAdmin && showCabinet) loadAdminData(adminTab);
+  }, [isAdmin, showCabinet, adminTab, loadAdminData]);
 
   // Load cabinet data
   const loadData = useCallback(async (tab: CabinetTab) => {
@@ -380,11 +433,18 @@ export default function Index() {
       {/* ═══ CABINET OVERLAY ═══ */}
       {showCabinet && (
         <div style={{ paddingTop: 97 }}>
-          <div style={{ background: "linear-gradient(135deg,#1e3a8a,#1e40af)", padding: "48px 0" }}>
+          <div style={{ background: isAdmin ? "linear-gradient(135deg,#0f172a,#1e293b)" : "linear-gradient(135deg,#1e3a8a,#1e40af)", padding: "48px 0" }}>
             <div className="container mx-auto px-6 flex items-center justify-between">
               <div>
-                <h1 style={{ fontFamily: I, fontSize: "clamp(1.6rem,3vw,2.2rem)", fontWeight: 800, color: "#fff" }}>Личный кабинет</h1>
-                <p style={{ fontFamily: I, color: "rgba(255,255,255,0.6)", marginTop: 6, fontSize: "0.875rem" }}>Управление платежами и документами</p>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+                  {isAdmin && <span style={{ background: "#f59e0b", color: "#0f172a", fontFamily: I, fontSize: "0.7rem", fontWeight: 700, padding: "3px 10px", borderRadius: 100, letterSpacing: "0.06em", textTransform: "uppercase" }}>Администратор</span>}
+                </div>
+                <h1 style={{ fontFamily: I, fontSize: "clamp(1.6rem,3vw,2.2rem)", fontWeight: 800, color: "#fff" }}>
+                  {isAdmin ? "Панель администратора" : "Личный кабинет"}
+                </h1>
+                <p style={{ fontFamily: I, color: "rgba(255,255,255,0.6)", marginTop: 6, fontSize: "0.875rem" }}>
+                  {isAdmin ? "Управление клиентами, платежами и сервисом" : "Управление платежами и документами"}
+                </p>
               </div>
               <button onClick={() => setShowCabinet(false)} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, padding: "8px 16px", color: "#fff", fontFamily: I, fontSize: "0.85rem", cursor: "pointer" }}>
                 <Icon name="X" size={14} />Закрыть
@@ -392,7 +452,369 @@ export default function Index() {
             </div>
           </div>
 
-          {!isLoggedIn ? (
+          {/* ═══ ADMIN PANEL ═══ */}
+          {isLoggedIn && isAdmin ? (
+            <div style={{ background: "#f1f5f9", minHeight: "70vh" }}>
+              <div className="container mx-auto px-6 py-8">
+                <div className="flex flex-col lg:flex-row gap-6">
+                  {/* Admin sidebar */}
+                  <aside className="lg:w-56 flex-shrink-0">
+                    <div style={{ background: "#fff", borderRadius: 12, padding: "14px", border: "1px solid #e2e8f0", marginBottom: 10 }}>
+                      <div style={{ width: 40, height: 40, borderRadius: "50%", background: "linear-gradient(135deg,#f59e0b,#d97706)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: I, fontWeight: 700, color: "#fff", marginBottom: 8 }}>
+                        <Icon name="ShieldCheck" size={18} style={{ color: "#fff" }} />
+                      </div>
+                      <div style={{ fontFamily: I, fontWeight: 700, color: "#0f172a", fontSize: "0.85rem" }}>{cabinetUser?.contact_name}</div>
+                      <div style={{ fontFamily: I, fontSize: "0.72rem", color: "#94a3b8" }}>{cabinetUser?.email}</div>
+                      <div style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "#fef3c7", border: "1px solid #fde68a", borderRadius: 100, padding: "3px 10px", marginTop: 6 }}>
+                        <Icon name="Star" size={10} style={{ color: "#d97706" }} />
+                        <span style={{ fontFamily: I, fontSize: "0.68rem", fontWeight: 700, color: "#d97706", textTransform: "uppercase", letterSpacing: "0.06em" }}>Администратор</span>
+                      </div>
+                    </div>
+                    <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e2e8f0", padding: "8px" }}>
+                      {([
+                        { key: "stats",  icon: "LayoutDashboard", label: "Обзор" },
+                        { key: "users",  icon: "Users",           label: "Клиенты" },
+                        { key: "orders", icon: "ArrowLeftRight",  label: "Все платежи" },
+                      ] as Array<{key: AdminTab; icon: string; label: string}>).map(item => (
+                        <button key={item.key} onClick={() => { setAdminTab(item.key); setSelectedUser(null); }} className={`sidebar-item ${adminTab === item.key ? "active" : ""}`}>
+                          <Icon name={item.icon as any} size={16} /><span>{item.label}</span>
+                        </button>
+                      ))}
+                      <div style={{ borderTop: "1px solid #f1f5f9", marginTop: 4, paddingTop: 4 }}>
+                        <button onClick={handleLogout} className="sidebar-item" style={{ color: "#dc2626" }}><Icon name="LogOut" size={16} /><span>Выйти</span></button>
+                      </div>
+                    </div>
+                  </aside>
+
+                  {/* Admin content */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    {adminActionMsg && (
+                      <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 8, padding: "10px 16px", marginBottom: 16, fontFamily: I, color: "#16a34a", fontSize: "0.875rem", display: "flex", alignItems: "center", gap: 8 }}>
+                        <Icon name="CheckCircle" size={15} style={{ color: "#16a34a" }} />{adminActionMsg}
+                      </div>
+                    )}
+
+                    {/* ─── Stats ─── */}
+                    {adminTab === "stats" && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                        <h2 style={{ fontFamily: I, fontSize: "1.4rem", fontWeight: 800, color: "#0f172a" }}>Обзор платформы</h2>
+                        {adminLoading ? <div style={{ fontFamily: I, color: "#94a3b8" }}>Загрузка...</div> : adminStats && (
+                          <>
+                            <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+                              {[
+                                { icon: "Users",         label: "Всего клиентов",  val: adminStats.total_users,    color: "#2563eb", bg: "#eff6ff" },
+                                { icon: "ShieldCheck",   label: "Верифицировано",  val: adminStats.verified_users, color: "#16a34a", bg: "#f0fdf4" },
+                                { icon: "ArrowLeftRight",label: "Всего платежей",  val: adminStats.total_orders,   color: "#7c3aed", bg: "#f5f3ff" },
+                                { icon: "MessageSquare", label: "Новых сообщений", val: adminStats.unread_messages,color: "#d97706", bg: "#fffbeb" },
+                              ].map((s, i) => (
+                                <div key={i} style={{ background: "#fff", borderRadius: 12, padding: "18px", border: "1px solid #e2e8f0" }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                                    <div style={{ width: 30, height: 30, borderRadius: 8, background: s.bg, display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name={s.icon as any} size={14} style={{ color: s.color }} /></div>
+                                    <span style={{ fontFamily: I, fontSize: "0.78rem", color: "#64748b" }}>{s.label}</span>
+                                  </div>
+                                  <div style={{ fontFamily: I, fontSize: "1.8rem", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.03em", lineHeight: 1 }}>{s.val}</div>
+                                </div>
+                              ))}
+                            </div>
+                            <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+                              {[
+                                { label: "В процессе",  val: adminStats.active_orders,  color: "#d97706" },
+                                { label: "Исполнено",   val: adminStats.done_orders,    color: "#16a34a" },
+                                { label: "На проверке", val: adminStats.pending_orders, color: "#2563eb" },
+                                { label: "Объём ($)",   val: `$${(adminStats.total_volume_usd/1000).toFixed(1)}k`, color: "#7c3aed" },
+                              ].map((s, i) => (
+                                <div key={i} style={{ background: "#fff", borderRadius: 10, padding: "16px 18px", border: "1px solid #e2e8f0", textAlign: "center" }}>
+                                  <div style={{ fontFamily: I, fontSize: "1.5rem", fontWeight: 800, color: s.color, letterSpacing: "-0.02em" }}>{s.val}</div>
+                                  <div style={{ fontFamily: I, fontSize: "0.75rem", color: "#94a3b8", marginTop: 4 }}>{s.label}</div>
+                                </div>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                        <div className="flex gap-3 flex-wrap">
+                          <button onClick={() => setAdminTab("users")} className="btn-primary" style={{ padding: "9px 20px", fontSize: "0.85rem" }}><Icon name="Users" size={15} />Управление клиентами</button>
+                          <button onClick={() => setAdminTab("orders")} className="btn-outline" style={{ padding: "9px 20px", fontSize: "0.85rem" }}><Icon name="ArrowLeftRight" size={15} />Все платежи</button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ─── Users ─── */}
+                    {adminTab === "users" && !selectedUser && (
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+                          <h2 style={{ fontFamily: I, fontSize: "1.4rem", fontWeight: 800, color: "#0f172a" }}>Клиенты</h2>
+                          <button onClick={() => loadAdminData("users")} className="btn-outline" style={{ padding: "7px 16px", fontSize: "0.82rem" }}><Icon name="RefreshCw" size={13} />Обновить</button>
+                        </div>
+                        {adminLoading ? <div style={{ fontFamily: I, color: "#94a3b8" }}>Загрузка...</div> : (
+                          <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e2e8f0", overflow: "hidden" }}>
+                            <div style={{ overflowX: "auto" }}>
+                              <table className="data-table" style={{ width: "100%", borderCollapse: "collapse" }}>
+                                <thead><tr>{["Клиент","Компания","ИНН","Платежей","Статус","Действия"].map(h => <th key={h}>{h}</th>)}</tr></thead>
+                                <tbody>
+                                  {adminUsers.map(u => (
+                                    <tr key={u.id}>
+                                      <td>
+                                        <div style={{ fontFamily: I, fontWeight: 600, color: "#0f172a", fontSize: "0.875rem" }}>{u.contact_name || "—"}</div>
+                                        <div style={{ fontFamily: I, fontSize: "0.72rem", color: "#94a3b8" }}>{u.email}</div>
+                                      </td>
+                                      <td style={{ fontSize: "0.82rem" }}>{u.company || "—"}</td>
+                                      <td style={{ fontSize: "0.82rem", whiteSpace: "nowrap" }}>{u.inn || "—"}</td>
+                                      <td style={{ textAlign: "center", fontWeight: 600, color: "#2563eb" }}>{u.order_count}</td>
+                                      <td>
+                                        <div style={{ display: "flex", gap: 4, flexDirection: "column" }}>
+                                          <span className={u.is_verified ? "badge-green" : "badge-amber"}>{u.is_verified ? "Верифицирован" : "Не верифицирован"}</span>
+                                          {!u.is_active && <span className="badge-blue" style={{ background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca" }}>Заблокирован</span>}
+                                        </div>
+                                      </td>
+                                      <td>
+                                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                                          <button onClick={async () => {
+                                            await loadAdminData("user_detail", u.id);
+                                            setAdminTab("user_detail");
+                                            setNewOrderForm(f => ({ ...f, user_id: String(u.id) }));
+                                            setNewDocForm(f => ({ ...f, user_id: String(u.id) }));
+                                          }} style={{ fontFamily: I, fontSize: "0.75rem", fontWeight: 600, color: "#2563eb", background: "none", border: "1px solid #bfdbfe", borderRadius: 6, padding: "4px 10px", cursor: "pointer" }}>
+                                            Детали
+                                          </button>
+                                          <button onClick={async () => {
+                                            const d = await apiAdmin("toggle_verify", { user_id: u.id }, token);
+                                            if (d.success) { setAdminActionMsg(d.is_verified ? "Верификация выдана" : "Верификация снята"); loadAdminData("users"); setTimeout(() => setAdminActionMsg(""), 3000); }
+                                          }} style={{ fontFamily: I, fontSize: "0.75rem", fontWeight: 600, color: u.is_verified ? "#d97706" : "#16a34a", background: "none", border: `1px solid ${u.is_verified ? "#fde68a" : "#bbf7d0"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer" }}>
+                                            {u.is_verified ? "Снять KYC" : "✓ KYC"}
+                                          </button>
+                                          <button onClick={async () => {
+                                            const d = await apiAdmin("toggle_active", { user_id: u.id }, token);
+                                            if (d.success) { setAdminActionMsg(d.is_active ? "Аккаунт разблокирован" : "Аккаунт заблокирован"); loadAdminData("users"); setTimeout(() => setAdminActionMsg(""), 3000); }
+                                          }} style={{ fontFamily: I, fontSize: "0.75rem", fontWeight: 600, color: u.is_active ? "#dc2626" : "#16a34a", background: "none", border: `1px solid ${u.is_active ? "#fecaca" : "#bbf7d0"}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer" }}>
+                                            {u.is_active ? "Блок" : "Разблок"}
+                                          </button>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* ─── User detail ─── */}
+                    {(adminTab === "user_detail" || (adminTab === "users" && selectedUser)) && selectedUser && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                          <button onClick={() => { setAdminTab("users"); setSelectedUser(null); loadAdminData("users"); }} style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: I, fontSize: "0.85rem", color: "#64748b", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                            <Icon name="ChevronLeft" size={16} />Назад к клиентам
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          <div style={{ background: "#fff", borderRadius: 12, padding: "20px 22px", border: "1px solid #e2e8f0" }}>
+                            <div style={{ fontFamily: I, fontWeight: 700, color: "#0f172a", marginBottom: 14, fontSize: "0.95rem" }}>Профиль клиента</div>
+                            {[["Имя", selectedUser.contact_name],["Email", selectedUser.email],["Телефон", selectedUser.phone],["Компания", selectedUser.company],["ИНН", selectedUser.inn],["КПП", selectedUser.kpp],["Дата регистрации", selectedUser.created_at]].map(([l,v], i) => (
+                              <div key={i} style={{ display: "flex", gap: 10, paddingBottom: 8, borderBottom: "1px solid #f1f5f9", marginBottom: 8 }}>
+                                <span style={{ fontFamily: I, fontSize: "0.78rem", color: "#94a3b8", minWidth: 120 }}>{l}</span>
+                                <span style={{ fontFamily: I, fontSize: "0.85rem", color: "#0f172a", fontWeight: 500 }}>{v || "—"}</span>
+                              </div>
+                            ))}
+                            <div style={{ display: "flex", gap: 6, marginTop: 14, flexWrap: "wrap" }}>
+                              <button onClick={async () => {
+                                const d = await apiAdmin("toggle_verify", { user_id: selectedUser.id }, token);
+                                if (d.success) { setAdminActionMsg(d.is_verified ? "KYC выдана" : "KYC снята"); setSelectedUser((p: any) => ({ ...p, is_verified: d.is_verified })); setTimeout(() => setAdminActionMsg(""), 3000); }
+                              }} className={selectedUser.is_verified ? "btn-outline" : "btn-primary"} style={{ padding: "8px 16px", fontSize: "0.82rem" }}>
+                                <Icon name="ShieldCheck" size={13} />{selectedUser.is_verified ? "Снять KYC" : "Выдать KYC"}
+                              </button>
+                              <button onClick={async () => {
+                                const d = await apiAdmin("toggle_active", { user_id: selectedUser.id }, token);
+                                if (d.success) { setAdminActionMsg(d.is_active ? "Разблокирован" : "Заблокирован"); setSelectedUser((p: any) => ({ ...p, is_active: d.is_active })); setTimeout(() => setAdminActionMsg(""), 3000); }
+                              }} style={{ padding: "8px 16px", fontSize: "0.82rem", fontFamily: I, fontWeight: 600, borderRadius: 8, cursor: "pointer", border: `1.5px solid ${selectedUser.is_active ? "#fecaca" : "#bbf7d0"}`, background: "none", color: selectedUser.is_active ? "#dc2626" : "#16a34a" }}>
+                                {selectedUser.is_active ? "Заблокировать" : "Разблокировать"}
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Message to client */}
+                          <div style={{ background: "#fff", borderRadius: 12, padding: "20px 22px", border: "1px solid #e2e8f0" }}>
+                            <div style={{ fontFamily: I, fontWeight: 700, color: "#0f172a", marginBottom: 14, fontSize: "0.95rem" }}>Написать клиенту</div>
+                            <textarea rows={4} className="form-input" style={{ resize: "none" } as any} value={adminMsg} onChange={e => setAdminMsg(e.target.value)} placeholder="Введите сообщение для клиента..." />
+                            <button className="btn-primary" style={{ marginTop: 10, padding: "9px 20px", fontSize: "0.85rem" }} disabled={adminMsgSending || !adminMsg.trim()}
+                              onClick={async () => {
+                                setAdminMsgSending(true);
+                                const d = await apiAdmin("send_message", { user_id: selectedUser.id, body: adminMsg }, token);
+                                if (d.success) { setAdminMsg(""); setAdminActionMsg("Сообщение отправлено"); setTimeout(() => setAdminActionMsg(""), 3000); }
+                                setAdminMsgSending(false);
+                              }}>
+                              {adminMsgSending ? "Отправка..." : "Отправить"}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Add order */}
+                        <div style={{ background: "#fff", borderRadius: 12, padding: "20px 22px", border: "1px solid #e2e8f0" }}>
+                          <div style={{ fontFamily: I, fontWeight: 700, color: "#0f172a", marginBottom: 14, fontSize: "0.95rem" }}>Создать платёж клиенту</div>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                            <div><label className="form-label">Услуга</label>
+                              <select className="form-input" value={newOrderForm.service} onChange={e => setNewOrderForm(f => ({ ...f, service: e.target.value }))}>
+                                {["Международный платёж","FX операция","Комплаенс","Криптовалютные операции","Документооборот и ВЭД"].map(s => <option key={s}>{s}</option>)}
+                              </select>
+                            </div>
+                            <div><label className="form-label">Направление *</label><input className="form-input" value={newOrderForm.country} onChange={e => setNewOrderForm(f => ({ ...f, country: e.target.value }))} placeholder="🇨🇳 Китай" /></div>
+                            <div><label className="form-label">Сумма</label><input className="form-input" value={newOrderForm.amount} onChange={e => setNewOrderForm(f => ({ ...f, amount: e.target.value }))} placeholder="10000" /></div>
+                            <div><label className="form-label">Валюта</label>
+                              <select className="form-input" value={newOrderForm.currency} onChange={e => setNewOrderForm(f => ({ ...f, currency: e.target.value }))}>
+                                {["USD","EUR","CNY","AED","RUB"].map(c => <option key={c}>{c}</option>)}
+                              </select>
+                            </div>
+                            <div><label className="form-label">Менеджер</label><input className="form-input" value={newOrderForm.manager} onChange={e => setNewOrderForm(f => ({ ...f, manager: e.target.value }))} placeholder="Козлов В.А." /></div>
+                          </div>
+                          <button className="btn-primary" style={{ padding: "9px 20px", fontSize: "0.85rem" }} disabled={!newOrderForm.country}
+                            onClick={async () => {
+                              const d = await apiAdmin("add_order", { ...newOrderForm, user_id: selectedUser.id }, token);
+                              if (d.success) { setAdminActionMsg(`Платёж ${d.order_num} создан`); setNewOrderForm(f => ({ ...f, country: "", amount: "" })); loadAdminData("user_detail", selectedUser.id); setTimeout(() => setAdminActionMsg(""), 3000); }
+                            }}>
+                            <Icon name="Plus" size={14} />Создать платёж
+                          </button>
+                        </div>
+
+                        {/* Orders table */}
+                        <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e2e8f0", overflow: "hidden" }}>
+                          <div style={{ padding: "14px 20px", borderBottom: "1px solid #f1f5f9", fontFamily: I, fontWeight: 700, color: "#0f172a", fontSize: "0.95rem" }}>Платежи клиента ({selectedUserOrders.length})</div>
+                          {selectedUserOrders.length === 0 ? <div style={{ padding: "20px", fontFamily: I, color: "#94a3b8", fontSize: "0.875rem" }}>Платежей нет</div> : (
+                            <div style={{ overflowX: "auto" }}>
+                              <table className="data-table" style={{ width: "100%", borderCollapse: "collapse" }}>
+                                <thead><tr>{["ID","Услуга","Направление","Сумма","Статус","Действия"].map(h => <th key={h}>{h}</th>)}</tr></thead>
+                                <tbody>
+                                  {selectedUserOrders.map(o => (
+                                    <tr key={o.id}>
+                                      <td style={{ color: "#2563eb", fontWeight: 600 }}>{o.order_num}</td>
+                                      <td style={{ fontSize: "0.82rem" }}>{o.service}</td>
+                                      <td style={{ whiteSpace: "nowrap" }}>{o.country}</td>
+                                      <td style={{ fontWeight: 600, whiteSpace: "nowrap" }}>{o.amount} {o.currency}</td>
+                                      <td>
+                                        {orderEditId === o.id ? (
+                                          <select className="form-input" style={{ padding: "4px 8px", fontSize: "0.8rem" }} value={orderEditForm.status} onChange={e => setOrderEditForm(f => ({ ...f, status: e.target.value }))}>
+                                            <option value="pending">На проверке</option>
+                                            <option value="active">В процессе</option>
+                                            <option value="done">Исполнен</option>
+                                          </select>
+                                        ) : <StatusBadge status={o.status} />}
+                                      </td>
+                                      <td>
+                                        {orderEditId === o.id ? (
+                                          <div style={{ display: "flex", gap: 5 }}>
+                                            <button onClick={async () => {
+                                              await apiAdmin("update_order", { order_id: o.id, ...orderEditForm }, token);
+                                              setOrderEditId(null); setAdminActionMsg("Статус обновлён"); loadAdminData("user_detail", selectedUser.id); setTimeout(() => setAdminActionMsg(""), 3000);
+                                            }} className="btn-primary" style={{ padding: "4px 12px", fontSize: "0.75rem" }}>Сохранить</button>
+                                            <button onClick={() => setOrderEditId(null)} style={{ fontFamily: I, fontSize: "0.75rem", color: "#64748b", background: "none", border: "1px solid #e2e8f0", borderRadius: 6, padding: "4px 10px", cursor: "pointer" }}>Отмена</button>
+                                          </div>
+                                        ) : (
+                                          <button onClick={() => { setOrderEditId(o.id); setOrderEditForm({ status: o.status, manager: o.manager, comment: "" }); }} style={{ fontFamily: I, fontSize: "0.75rem", color: "#2563eb", background: "none", border: "1px solid #bfdbfe", borderRadius: 6, padding: "4px 10px", cursor: "pointer" }}>Изменить</button>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Add document */}
+                        <div style={{ background: "#fff", borderRadius: 12, padding: "20px 22px", border: "1px solid #e2e8f0" }}>
+                          <div style={{ fontFamily: I, fontWeight: 700, color: "#0f172a", marginBottom: 14, fontSize: "0.95rem" }}>Добавить документ</div>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                            <div className="sm:col-span-2"><label className="form-label">Название документа *</label><input className="form-input" value={newDocForm.name} onChange={e => setNewDocForm(f => ({ ...f, name: e.target.value }))} placeholder="SWIFT-подтверждение PAY-0001" /></div>
+                            <div><label className="form-label">Тип</label>
+                              <select className="form-input" value={newDocForm.file_type} onChange={e => setNewDocForm(f => ({ ...f, file_type: e.target.value }))}>
+                                {["PDF","XLSX","DOCX","ZIP"].map(t => <option key={t}>{t}</option>)}
+                              </select>
+                            </div>
+                            <div><label className="form-label">Размер</label><input className="form-input" value={newDocForm.file_size} onChange={e => setNewDocForm(f => ({ ...f, file_size: e.target.value }))} placeholder="1.2 МБ" /></div>
+                          </div>
+                          <button className="btn-primary" style={{ padding: "9px 20px", fontSize: "0.85rem" }} disabled={!newDocForm.name}
+                            onClick={async () => {
+                              const d = await apiAdmin("add_document", { ...newDocForm, user_id: selectedUser.id }, token);
+                              if (d.success) { setAdminActionMsg("Документ добавлен"); setNewDocForm(f => ({ ...f, name: "", file_size: "" })); loadAdminData("user_detail", selectedUser.id); setTimeout(() => setAdminActionMsg(""), 3000); }
+                            }}>
+                            <Icon name="Plus" size={14} />Добавить документ
+                          </button>
+                          {selectedUserDocs.length > 0 && (
+                            <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 6 }}>
+                              {selectedUserDocs.map(doc => (
+                                <div key={doc.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "#f8fafc", borderRadius: 8, border: "1px solid #e2e8f0" }}>
+                                  <Icon name="FileText" size={14} style={{ color: "#2563eb" }} />
+                                  <span style={{ fontFamily: I, fontSize: "0.82rem", color: "#0f172a", flex: 1 }}>{doc.name}</span>
+                                  <span style={{ fontFamily: I, fontSize: "0.72rem", color: "#94a3b8" }}>{doc.file_type} · {doc.file_size} · {doc.date}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ─── All orders ─── */}
+                    {adminTab === "orders" && (
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+                          <h2 style={{ fontFamily: I, fontSize: "1.4rem", fontWeight: 800, color: "#0f172a" }}>Все платежи</h2>
+                          <button onClick={() => loadAdminData("orders")} className="btn-outline" style={{ padding: "7px 16px", fontSize: "0.82rem" }}><Icon name="RefreshCw" size={13} />Обновить</button>
+                        </div>
+                        {adminLoading ? <div style={{ fontFamily: I, color: "#94a3b8" }}>Загрузка...</div> : (
+                          <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e2e8f0", overflow: "hidden" }}>
+                            <div style={{ overflowX: "auto" }}>
+                              <table className="data-table" style={{ width: "100%", borderCollapse: "collapse" }}>
+                                <thead><tr>{["ID","Клиент","Услуга","Направление","Сумма","Менеджер","Дата","Статус","Изменить"].map(h => <th key={h}>{h}</th>)}</tr></thead>
+                                <tbody>
+                                  {adminOrders.map(o => (
+                                    <tr key={o.id}>
+                                      <td style={{ color: "#2563eb", fontWeight: 600 }}>{o.order_num}</td>
+                                      <td>
+                                        <div style={{ fontFamily: I, fontWeight: 500, color: "#0f172a", fontSize: "0.82rem" }}>{o.client_name || "—"}</div>
+                                        <div style={{ fontFamily: I, fontSize: "0.7rem", color: "#94a3b8" }}>{o.client_email}</div>
+                                      </td>
+                                      <td style={{ fontSize: "0.82rem", whiteSpace: "nowrap" }}>{o.service}</td>
+                                      <td style={{ whiteSpace: "nowrap" }}>{o.country}</td>
+                                      <td style={{ fontWeight: 600, whiteSpace: "nowrap" }}>{o.amount} {o.currency}</td>
+                                      <td style={{ whiteSpace: "nowrap", fontSize: "0.82rem" }}>{o.manager}</td>
+                                      <td style={{ whiteSpace: "nowrap", fontSize: "0.82rem" }}>{o.date}</td>
+                                      <td>
+                                        {orderEditId === o.id ? (
+                                          <select className="form-input" style={{ padding: "4px 8px", fontSize: "0.8rem" }} value={orderEditForm.status} onChange={e => setOrderEditForm(f => ({ ...f, status: e.target.value }))}>
+                                            <option value="pending">На проверке</option>
+                                            <option value="active">В процессе</option>
+                                            <option value="done">Исполнен</option>
+                                          </select>
+                                        ) : <StatusBadge status={o.status} />}
+                                      </td>
+                                      <td>
+                                        {orderEditId === o.id ? (
+                                          <div style={{ display: "flex", gap: 4 }}>
+                                            <button onClick={async () => {
+                                              await apiAdmin("update_order", { order_id: o.id, ...orderEditForm }, token);
+                                              setOrderEditId(null); setAdminActionMsg("Обновлено"); loadAdminData("orders"); setTimeout(() => setAdminActionMsg(""), 3000);
+                                            }} className="btn-primary" style={{ padding: "4px 10px", fontSize: "0.72rem" }}>✓</button>
+                                            <button onClick={() => setOrderEditId(null)} style={{ fontFamily: I, fontSize: "0.72rem", color: "#64748b", background: "none", border: "1px solid #e2e8f0", borderRadius: 6, padding: "4px 8px", cursor: "pointer" }}>✕</button>
+                                          </div>
+                                        ) : (
+                                          <button onClick={() => { setOrderEditId(o.id); setOrderEditForm({ status: o.status, manager: o.manager, comment: "" }); }} style={{ fontFamily: I, fontSize: "0.72rem", color: "#2563eb", background: "none", border: "1px solid #bfdbfe", borderRadius: 6, padding: "4px 8px", cursor: "pointer" }}>Изменить</button>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : !isLoggedIn ? (
             <div style={{ background: "#f8fafc", minHeight: "70vh", padding: "60px 0" }}>
               <div className="container mx-auto px-6" style={{ maxWidth: 440 }}>
                 {!registerMode ? (

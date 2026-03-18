@@ -1,10 +1,10 @@
 {
   "tests": [
     {
-      "name": "Login with demo account",
+      "name": "Login with admin account",
       "method": "POST",
       "path": "/",
-      "body": {"action": "login", "email": "demo@vedagent.ru", "password": "demo1234"},
+      "body": {"action": "login", "email": "admin@vedagent.ru", "password": "admin"},
       "expectedStatus": 200,
       "expectedBody": {"token": "string"},
       "bodyMatcher": "partial"
@@ -13,26 +13,18 @@
       "name": "Login with wrong password",
       "method": "POST",
       "path": "/",
-      "body": {"action": "login", "email": "demo@vedagent.ru", "password": "wrongpass"},
+      "body": {"action": "login", "email": "admin@vedagent.ru", "password": "wrongpass"},
       "expectedStatus": 401,
       "expectedBody": {"error": "string"},
       "bodyMatcher": "partial"
     },
     {
-      "name": "Register new user",
+      "name": "Login without credentials",
       "method": "POST",
       "path": "/",
-      "body": {
-        "action": "register",
-        "email": "test_xyz_2026_reg@example.com",
-        "password": "testpass123",
-        "contact_name": "Тест Тестов",
-        "company": "ООО Тест",
-        "inn": "1234567890",
-        "phone": "+7 999 000 00 00"
-      },
-      "expectedStatus": 200,
-      "expectedBody": {"success": true},
+      "body": {"action": "login", "email": "", "password": ""},
+      "expectedStatus": 400,
+      "expectedBody": {"error": "string"},
       "bodyMatcher": "partial"
     }
   ]

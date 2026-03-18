@@ -37,7 +37,7 @@ def user_by_token(cur, token: str):
     if not token:
         return None
     cur.execute(
-        """SELECT u.id, u.email, u.contact_name, u.company, u.inn, u.phone, u.kpp, u.is_verified
+        """SELECT u.id, u.email, u.contact_name, u.company, u.inn, u.phone, u.kpp, u.is_verified, u.is_admin
            FROM cabinet_sessions s JOIN cabinet_users u ON u.id = s.user_id
            WHERE s.token = %s AND s.expires_at > NOW() AND u.is_active = TRUE""",
         (token,),
@@ -46,7 +46,7 @@ def user_by_token(cur, token: str):
     if not row:
         return None
     return {"id": row[0], "email": row[1], "contact_name": row[2], "company": row[3],
-            "inn": row[4], "phone": row[5], "kpp": row[6], "is_verified": row[7]}
+            "inn": row[4], "phone": row[5], "kpp": row[6], "is_verified": row[7], "is_admin": row[8]}
 
 
 CORS = {
@@ -86,7 +86,7 @@ def handler(event: dict, context) -> dict:
             if not email or not password:
                 return resp(400, {"error": "Email и пароль обязательны"})
             cur.execute(
-                "SELECT id, password_hash, contact_name, company, inn, phone, kpp, is_verified, is_active FROM cabinet_users WHERE email = %s",
+                "SELECT id, password_hash, contact_name, company, inn, phone, kpp, is_verified, is_active, is_admin FROM cabinet_users WHERE email = %s",
                 (email,),
             )
             row = cur.fetchone()
@@ -102,7 +102,7 @@ def handler(event: dict, context) -> dict:
                 "token": new_token,
                 "user": {"id": user_id, "email": email, "contact_name": row[2],
                          "company": row[3], "inn": row[4], "phone": row[5],
-                         "kpp": row[6], "is_verified": row[7]},
+                         "kpp": row[6], "is_verified": row[7], "is_admin": row[9]},
             })
 
         if action == "register":
