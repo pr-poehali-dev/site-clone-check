@@ -279,20 +279,20 @@ export default function Index() {
       {/* ─── HEADER ─── */}
       <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, background: "#fff", borderBottom: "1px solid #e5e7eb", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
         {/* Top bar */}
-        <div style={{ background: "#1e3a8a", padding: "7px 0" }}>
+        <div style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", padding: "6px 0" }}>
           <div className="container mx-auto px-6 flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-5">
-              <a href="tel:+74993985002" style={{ color: "rgba(255,255,255,0.85)", fontSize: "0.78rem", fontFamily: I, textDecoration: "none", display: "flex", alignItems: "center", gap: 5 }}>
-                <Icon name="Phone" size={11} style={{ color: "#93c5fd" }} />+7 (499) 398-50-02
+              <a href="tel:+74993985002" style={{ color: "#64748b", fontSize: "0.78rem", fontFamily: I, textDecoration: "none", display: "flex", alignItems: "center", gap: 5 }}>
+                <Icon name="Phone" size={11} style={{ color: "#2563eb" }} />+7 (499) 398-50-02
               </a>
-              <a href="mailto:info@vedagentservice.ru" style={{ color: "rgba(255,255,255,0.85)", fontSize: "0.78rem", fontFamily: I, textDecoration: "none", display: "flex", alignItems: "center", gap: 5 }} className="hidden sm:flex">
-                <Icon name="Mail" size={11} style={{ color: "#93c5fd" }} />info@vedagentservice.ru
+              <a href="mailto:info@vedagentservice.ru" style={{ color: "#64748b", fontSize: "0.78rem", fontFamily: I, textDecoration: "none", display: "flex", alignItems: "center", gap: 5 }} className="hidden sm:flex">
+                <Icon name="Mail" size={11} style={{ color: "#2563eb" }} />info@vedagentservice.ru
               </a>
             </div>
             <div className="flex items-center gap-3">
               {!rLoading && rates.slice(0, 3).map(r => (
-                <span key={r.code} style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.7)", fontFamily: I }}>
-                  {r.flag} <span style={{ color: "#93c5fd", fontWeight: 600 }}>{r.code}</span> {r.sell.toFixed(2)}
+                <span key={r.code} style={{ fontSize: "0.75rem", color: "#64748b", fontFamily: I }}>
+                  {r.flag} <span style={{ color: "#2563eb", fontWeight: 600 }}>{r.code}</span> {r.sell.toFixed(2)} ₽
                 </span>
               ))}
             </div>
@@ -345,91 +345,111 @@ export default function Index() {
 
         {/* ══════ HOME ══════ */}
         {section === "home" && <>
-          {/* Hero */}
-          <section className="hero-bg" style={{ minHeight: "88vh", display: "flex", flexDirection: "column", justifyContent: "center", position: "relative" }}>
-            <div style={{ position: "absolute", top: -80, right: -80, width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle,rgba(99,102,241,0.35) 0%,transparent 70%)", pointerEvents: "none" }} />
-            <div style={{ position: "absolute", bottom: 40, left: "10%", width: 280, height: 280, borderRadius: "50%", background: "radial-gradient(circle,rgba(59,130,246,0.25) 0%,transparent 70%)", pointerEvents: "none" }} />
-            <div className="container mx-auto px-6 py-20 relative">
-              <div style={{ maxWidth: 680 }} className="animate-slide-up">
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 100, padding: "6px 16px", marginBottom: 28 }}>
-                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#4ade80", boxShadow: "0 0 6px #4ade80" }} />
-                  <span style={{ fontFamily: I, fontSize: "0.78rem", fontWeight: 500, color: "rgba(255,255,255,0.9)", letterSpacing: "0.05em" }}>Профессиональный участник валютного рынка · с 2018 года</span>
+
+          {/* Hero — светлый */}
+          <section style={{ background: "linear-gradient(160deg,#f0f7ff 0%,#e8f0fe 50%,#f5f3ff 100%)", minHeight: "82vh", display: "flex", flexDirection: "column", justifyContent: "center", position: "relative", overflow: "hidden" }}>
+            {/* декоративные круги */}
+            <div style={{ position: "absolute", top: -120, right: -80, width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle,rgba(37,99,235,0.07) 0%,transparent 70%)", pointerEvents: "none" }} />
+            <div style={{ position: "absolute", bottom: -60, left: "5%", width: 320, height: 320, borderRadius: "50%", background: "radial-gradient(circle,rgba(79,70,229,0.06) 0%,transparent 70%)", pointerEvents: "none" }} />
+
+            <div className="container mx-auto px-6 py-16 relative">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                {/* Left */}
+                <div className="animate-slide-up">
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 100, padding: "6px 16px", marginBottom: 28 }}>
+                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", boxShadow: "0 0 6px #22c55e" }} />
+                    <span style={{ fontFamily: I, fontSize: "0.78rem", fontWeight: 600, color: "#1e40af", letterSpacing: "0.04em" }}>Профессиональный участник валютного рынка · с 2018 года</span>
+                  </div>
+                  <h1 style={{ fontFamily: I, fontSize: "clamp(2.2rem,4.5vw,3.4rem)", fontWeight: 800, color: "#0f172a", lineHeight: 1.12, letterSpacing: "-0.03em", marginBottom: 20 }}>
+                    Международные<br />платежи{" "}
+                    <span style={{ color: "#2563eb" }}>без ограничений</span>
+                  </h1>
+                  <p style={{ fontFamily: I, fontSize: "1.05rem", color: "#475569", lineHeight: 1.75, maxWidth: 480, marginBottom: 36 }}>
+                    Оплата инвойсов зарубежным поставщикам, FX‑операции и ВЭД‑сопровождение. 50+ стран, собственная инфраструктура, без санкционных ограничений.
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    <button onClick={() => nav("contacts")} className="btn-primary" style={{ padding: "13px 32px", fontSize: "0.92rem" }}>
+                      Получить расчёт <Icon name="ArrowRight" size={16} />
+                    </button>
+                    <button onClick={() => nav("services")} className="btn-outline" style={{ padding: "12px 28px", fontSize: "0.92rem" }}>Наши услуги</button>
+                  </div>
+                  {/* Trust badges */}
+                  <div className="flex flex-wrap gap-2 mt-8">
+                    {["ISO 27001","AML/KYC","ЦБ РФ 181-И","152-ФЗ"].map(b => (
+                      <span key={b} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "#fff", border: "1px solid #e2e8f0", borderRadius: 100, padding: "5px 14px", fontFamily: I, fontSize: "0.72rem", fontWeight: 600, color: "#475569", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+                        <Icon name="ShieldCheck" size={11} style={{ color: "#2563eb" }} />{b}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <h1 style={{ fontFamily: I, fontSize: "clamp(2.4rem,5.5vw,4rem)", fontWeight: 800, color: "#fff", lineHeight: 1.1, letterSpacing: "-0.03em", marginBottom: 24 }}>
-                  Международные<br />платежи{" "}
-                  <span style={{ background: "linear-gradient(90deg,#93c5fd,#a5b4fc)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>без ограничений</span>
-                </h1>
-                <p style={{ fontFamily: I, fontSize: "1.05rem", color: "rgba(255,255,255,0.75)", lineHeight: 1.75, maxWidth: 500, marginBottom: 36 }}>
-                  Оплата инвойсов зарубежным поставщикам, FX‑операции и ВЭД‑сопровождение. 50+ стран, собственная инфраструктура.
-                </p>
-                <div className="flex flex-wrap gap-3">
-                  <button onClick={() => nav("contacts")} className="btn-white" style={{ padding: "13px 32px", fontSize: "0.9rem" }}>
-                    Получить расчёт <Icon name="ArrowRight" size={16} />
-                  </button>
-                  <button onClick={() => nav("services")} className="btn-white-outline" style={{ padding: "13px 32px", fontSize: "0.9rem" }}>Наши услуги</button>
-                </div>
-                <div className="flex flex-wrap gap-2 mt-8">
-                  {["ISO 27001","AML/KYC","ЦБ РФ 181-И","152-ФЗ"].map(b => (
-                    <span key={b} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 100, padding: "4px 12px", fontFamily: I, fontSize: "0.72rem", fontWeight: 500, color: "rgba(255,255,255,0.7)" }}>
-                      <Icon name="ShieldCheck" size={11} style={{ color: "#93c5fd" }} />{b}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-            {/* Stats bar */}
-            <div style={{ background: "rgba(0,0,0,0.25)", backdropFilter: "blur(8px)", borderTop: "1px solid rgba(255,255,255,0.1)", marginTop: "auto" }}>
-              <div className="container mx-auto px-6">
-                <div className="grid grid-cols-2 md:grid-cols-4" style={{ borderLeft: "none" }}>
-                  {[{n:"50+",l:"стран и валют"},{n:"500k+",l:"операций"},{n:"99.8%",l:"успешность"},{n:"$127M",l:"объём/мес"}].map((s,i) => (
-                    <div key={i} style={{ padding: "20px 16px", textAlign: "center", borderRight: i < 3 ? "1px solid rgba(255,255,255,0.08)" : "none" }}>
-                      <div style={{ fontFamily: I, fontSize: "1.8rem", fontWeight: 800, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1 }}>{s.n}</div>
-                      <div style={{ fontFamily: I, fontSize: "0.72rem", color: "rgba(255,255,255,0.5)", marginTop: 4, textTransform: "uppercase", letterSpacing: "0.07em" }}>{s.l}</div>
+
+                {/* Right — cards */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {/* Rates card */}
+                  <div style={{ background: "#fff", borderRadius: 16, padding: "20px 24px", boxShadow: "0 4px 24px rgba(37,99,235,0.08)", border: "1px solid #e2e8f0" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                      <span style={{ fontFamily: I, fontWeight: 700, color: "#0f172a", fontSize: "0.9rem" }}>Курсы валют</span>
+                      <span style={{ fontFamily: I, fontSize: "0.7rem", color: "#94a3b8" }}>обновляется каждые 5 мин</span>
                     </div>
-                  ))}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                      {(rLoading ? CURRENCIES.map(c=>({code:c.code,name:c.name,flag:c.flag,buy:c.buyFallback,sell:c.sellFallback,change:0})) : rates).map(r => (
+                        <div key={r.code} style={{ background: "#f8fafc", borderRadius: 10, padding: "12px 14px", border: "1px solid #f1f5f9" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                            <span style={{ fontSize: "1.1rem" }}>{r.flag}</span>
+                            <span style={{ fontFamily: I, fontWeight: 700, color: "#0f172a", fontSize: "0.85rem" }}>{r.code}</span>
+                            <span style={{ marginLeft: "auto", fontFamily: I, fontSize: "0.68rem", fontWeight: 600, color: r.change >= 0 ? "#16a34a" : "#dc2626" }}>
+                              {r.change >= 0 ? "▲" : "▼"}{Math.abs(r.change).toFixed(2)}
+                            </span>
+                          </div>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <div>
+                              <div style={{ fontFamily: I, fontSize: "0.62rem", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em" }}>покупка</div>
+                              <div style={{ fontFamily: I, fontWeight: 700, color: "#1e40af", fontSize: "0.9rem" }}>{r.buy.toFixed(2)}</div>
+                            </div>
+                            <div style={{ width: 1, background: "#e2e8f0", margin: "2px 0" }} />
+                            <div>
+                              <div style={{ fontFamily: I, fontSize: "0.62rem", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em" }}>продажа</div>
+                              <div style={{ fontFamily: I, fontWeight: 700, color: "#0f172a", fontSize: "0.9rem" }}>{r.sell.toFixed(2)}</div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Stats row */}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10 }}>
+                    {[{n:"50+",l:"стран"},{n:"500k+",l:"операций"},{n:"99.8%",l:"успешность"},{n:"2018",l:"год осн."}].map((s,i) => (
+                      <div key={i} style={{ background: "#fff", borderRadius: 12, padding: "14px 10px", textAlign: "center", border: "1px solid #e2e8f0", boxShadow: "0 1px 6px rgba(0,0,0,0.04)" }}>
+                        <div style={{ fontFamily: I, fontSize: "1.25rem", fontWeight: 800, color: "#2563eb", letterSpacing: "-0.02em", lineHeight: 1 }}>{s.n}</div>
+                        <div style={{ fontFamily: I, fontSize: "0.62rem", color: "#94a3b8", marginTop: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>{s.l}</div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* Rates ticker */}
-          <div style={{ background: "#1e40af", padding: "10px 0", borderBottom: "1px solid #1d4ed8" }}>
-            <div className="container mx-auto px-6">
-              <div className="flex flex-wrap items-center gap-2">
-                <span style={{ fontFamily: I, fontSize: "0.72rem", fontWeight: 600, color: "rgba(255,255,255,0.55)", textTransform: "uppercase", letterSpacing: "0.08em", marginRight: 8 }}>Курсы валют:</span>
-                {rLoading ? <span style={{ fontFamily: I, fontSize: "0.8rem", color: "rgba(255,255,255,0.4)" }}>Загрузка...</span> : rates.map(r => (
-                  <div key={r.code} className="rate-pill">
-                    <span>{r.flag}</span>
-                    <span style={{ fontWeight: 600 }}>{r.code}</span>
-                    <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.72rem" }}>покупка</span>
-                    <span style={{ color: "#93c5fd", fontWeight: 600 }}>{r.buy.toFixed(2)}</span>
-                    <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.72rem" }}>продажа</span>
-                    <span style={{ color: "#93c5fd", fontWeight: 600 }}>{r.sell.toFixed(2)}</span>
-                    <span style={{ fontSize: "0.68rem", color: r.change >= 0 ? "#4ade80" : "#f87171" }}>{r.change >= 0 ? "▲" : "▼"}{Math.abs(r.change).toFixed(2)}</span>
-                  </div>
-                ))}
-                <span style={{ marginLeft: "auto", fontFamily: I, fontSize: "0.68rem", color: "rgba(255,255,255,0.3)" }}>обновление каждые 5 мин</span>
-              </div>
-            </div>
-          </div>
-
           {/* Services */}
-          <section className="section-padding" style={{ background: "#f9fafb" }}>
+          <section className="section-padding" style={{ background: "#fff" }}>
             <div className="container mx-auto px-6">
               <div style={{ textAlign: "center", marginBottom: 52 }}>
                 <div className="section-label" style={{ justifyContent: "center" }}>Что мы делаем</div>
-                <h2 style={{ fontFamily: I, fontSize: "clamp(1.8rem,3.5vw,2.5rem)", fontWeight: 800, color: "#111827", letterSpacing: "-0.025em" }}>Наши услуги</h2>
-                <p style={{ fontFamily: I, color: "#6b7280", marginTop: 12, maxWidth: 520, margin: "12px auto 0", lineHeight: 1.7 }}>Полный спектр сервисов для безопасных международных расчётов</p>
+                <h2 style={{ fontFamily: I, fontSize: "clamp(1.8rem,3.5vw,2.5rem)", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.025em" }}>Наши услуги</h2>
+                <p style={{ fontFamily: I, color: "#64748b", marginTop: 12, maxWidth: 520, margin: "12px auto 0", lineHeight: 1.7 }}>Полный спектр сервисов для безопасных международных расчётов</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {SERVICES.map((s, i) => (
-                  <div key={i} className="card-service">
+                  <div key={i} className="card-service" style={{ background: "#fff" }}>
                     <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 18 }}>
-                      <div className="icon-box"><Icon name={s.icon as any} size={22} style={{ color: "#2563eb" }} /></div>
+                      <div style={{ width: 48, height: 48, borderRadius: 12, background: "linear-gradient(135deg,#eff6ff,#eef2ff)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <Icon name={s.icon as any} size={22} style={{ color: "#2563eb" }} />
+                      </div>
                       <span className="badge-blue">{s.price}</span>
                     </div>
-                    <h3 style={{ fontFamily: I, fontSize: "1rem", fontWeight: 700, color: "#111827", marginBottom: 8 }}>{s.title}</h3>
-                    <p style={{ fontFamily: I, color: "#6b7280", fontSize: "0.875rem", lineHeight: 1.65, marginBottom: 16 }}>{s.desc}</p>
+                    <h3 style={{ fontFamily: I, fontSize: "1rem", fontWeight: 700, color: "#0f172a", marginBottom: 8 }}>{s.title}</h3>
+                    <p style={{ fontFamily: I, color: "#64748b", fontSize: "0.875rem", lineHeight: 1.65, marginBottom: 16 }}>{s.desc}</p>
                     <button onClick={() => nav("contacts")} style={{ fontFamily: I, fontSize: "0.83rem", fontWeight: 600, color: "#2563eb", background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, padding: 0 }}>
                       Узнать подробнее <Icon name="ArrowRight" size={14} />
                     </button>
@@ -440,37 +460,37 @@ export default function Index() {
           </section>
 
           {/* Why us */}
-          <section className="section-padding" style={{ background: "#fff" }}>
+          <section className="section-padding" style={{ background: "#f8fafc" }}>
             <div className="container mx-auto px-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
                 <div>
                   <div className="section-label">Почему мы</div>
-                  <h2 style={{ fontFamily: I, fontSize: "clamp(1.6rem,3vw,2.2rem)", fontWeight: 800, color: "#111827", letterSpacing: "-0.025em", lineHeight: 1.25, marginTop: 8 }}>
+                  <h2 style={{ fontFamily: I, fontSize: "clamp(1.6rem,3vw,2.2rem)", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.025em", lineHeight: 1.25, marginTop: 8 }}>
                     Работаем с зарубежными партнёрами легально и безопасно
                   </h2>
-                  <p style={{ fontFamily: I, color: "#6b7280", lineHeight: 1.75, marginTop: 18 }}>
+                  <p style={{ fontFamily: I, color: "#64748b", lineHeight: 1.75, marginTop: 18 }}>
                     Собственная инфраструктура из 30+ юридических лиц в банках разных юрисдикций позволяет проводить платежи туда, куда банки отказывают. С 2018 года, 500k+ операций.
                   </p>
                   <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {ADVANTAGES.map((a, i) => (
-                      <div key={i} style={{ padding: "18px 20px", borderRadius: 10, border: "1px solid #e5e7eb", background: "#fafafa" }}>
+                      <div key={i} style={{ padding: "18px 20px", borderRadius: 10, border: "1px solid #e2e8f0", background: "#fff", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                          <div style={{ width: 30, height: 30, borderRadius: 7, background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <div style={{ width: 30, height: 30, borderRadius: 7, background: "linear-gradient(135deg,#eff6ff,#eef2ff)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                             <Icon name={a.icon as any} size={15} style={{ color: "#2563eb" }} />
                           </div>
-                          <span style={{ fontFamily: I, fontWeight: 600, color: "#111827", fontSize: "0.875rem" }}>{a.title}</span>
+                          <span style={{ fontFamily: I, fontWeight: 600, color: "#0f172a", fontSize: "0.875rem" }}>{a.title}</span>
                         </div>
-                        <p style={{ fontFamily: I, color: "#6b7280", fontSize: "0.82rem", lineHeight: 1.55 }}>{a.desc}</p>
+                        <p style={{ fontFamily: I, color: "#64748b", fontSize: "0.82rem", lineHeight: 1.55 }}>{a.desc}</p>
                       </div>
                     ))}
                   </div>
                   <button onClick={() => nav("about")} className="btn-outline" style={{ marginTop: 28 }}>О компании</button>
                 </div>
                 <div style={{ position: "relative" }}>
-                  <img src="https://cdn.poehali.dev/projects/bdb0b596-d990-4173-9987-44d3766a158a/files/f4cd3994-da5c-48a6-aee1-38574ccee131.jpg" alt="Команда" style={{ width: "100%", height: 420, objectFit: "cover", borderRadius: 16 }} />
-                  <div style={{ position: "absolute", bottom: -16, left: -16, padding: "18px 22px", background: "linear-gradient(135deg,#2563eb,#4f46e5)", borderRadius: 12 }}>
+                  <img src="https://cdn.poehali.dev/projects/bdb0b596-d990-4173-9987-44d3766a158a/files/f4cd3994-da5c-48a6-aee1-38574ccee131.jpg" alt="Команда" style={{ width: "100%", height: 420, objectFit: "cover", borderRadius: 16, boxShadow: "0 12px 40px rgba(37,99,235,0.12)" }} />
+                  <div style={{ position: "absolute", bottom: -16, left: -16, padding: "18px 22px", background: "#2563eb", borderRadius: 12, boxShadow: "0 8px 24px rgba(37,99,235,0.3)" }}>
                     <div style={{ fontFamily: I, fontSize: "2rem", fontWeight: 800, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1 }}>2018</div>
-                    <div style={{ fontFamily: I, fontSize: "0.78rem", color: "rgba(255,255,255,0.8)", marginTop: 2, fontWeight: 500 }}>год основания</div>
+                    <div style={{ fontFamily: I, fontSize: "0.78rem", color: "rgba(255,255,255,0.85)", marginTop: 2, fontWeight: 500 }}>год основания</div>
                   </div>
                 </div>
               </div>
@@ -478,11 +498,11 @@ export default function Index() {
           </section>
 
           {/* Process */}
-          <section className="section-padding section-gray">
+          <section className="section-padding" style={{ background: "#fff" }}>
             <div className="container mx-auto px-6">
               <div style={{ textAlign: "center", marginBottom: 48 }}>
                 <div className="section-label" style={{ justifyContent: "center" }}>Как работаем</div>
-                <h2 style={{ fontFamily: I, fontSize: "clamp(1.6rem,3vw,2.2rem)", fontWeight: 800, color: "#111827", letterSpacing: "-0.025em" }}>Четыре шага до платежа</h2>
+                <h2 style={{ fontFamily: I, fontSize: "clamp(1.6rem,3vw,2.2rem)", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.025em" }}>Четыре шага до платежа</h2>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 {[
@@ -491,26 +511,55 @@ export default function Index() {
                   { n: "03", title: "Договор", desc: "Согласуем условия, комиссию и сроки." },
                   { n: "04", title: "Исполнение", desc: "1–3 рабочих дня. SWIFT-подтверждение в кабинете." },
                 ].map((s, i) => (
-                  <div key={i} style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "24px 22px" }}>
-                    <div style={{ fontFamily: I, fontSize: "2.5rem", fontWeight: 800, color: "#dbeafe", letterSpacing: "-0.04em", lineHeight: 1, marginBottom: 10 }}>{s.n}</div>
-                    <h3 style={{ fontFamily: I, fontSize: "0.95rem", fontWeight: 700, color: "#111827", marginBottom: 6 }}>{s.title}</h3>
-                    <p style={{ fontFamily: I, color: "#6b7280", fontSize: "0.85rem", lineHeight: 1.6 }}>{s.desc}</p>
+                  <div key={i} style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 14, padding: "28px 22px", position: "relative", overflow: "hidden" }}>
+                    <div style={{ position: "absolute", top: 16, right: 18, fontFamily: I, fontSize: "3rem", fontWeight: 800, color: "#e2e8f0", letterSpacing: "-0.04em", lineHeight: 1 }}>{s.n}</div>
+                    <div style={{ width: 36, height: 36, borderRadius: 9, background: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+                      <span style={{ fontFamily: I, fontWeight: 800, color: "#fff", fontSize: "0.9rem" }}>{s.n}</span>
+                    </div>
+                    <h3 style={{ fontFamily: I, fontSize: "0.95rem", fontWeight: 700, color: "#0f172a", marginBottom: 6 }}>{s.title}</h3>
+                    <p style={{ fontFamily: I, color: "#64748b", fontSize: "0.85rem", lineHeight: 1.6 }}>{s.desc}</p>
                   </div>
                 ))}
               </div>
             </div>
           </section>
 
-          {/* CTA */}
-          <section className="section-dark" style={{ padding: "72px 0" }}>
-            <div className="container mx-auto px-6 text-center">
-              <h2 style={{ fontFamily: I, fontSize: "clamp(1.6rem,3vw,2.4rem)", fontWeight: 800, color: "#fff", letterSpacing: "-0.025em", marginBottom: 14 }}>Готовы провести международный платёж?</h2>
-              <p style={{ fontFamily: I, color: "rgba(255,255,255,0.65)", marginBottom: 32 }}>Первичная консультация бесплатно. Расчёт комиссии — в течение 2 часов.</p>
-              <div className="flex flex-wrap gap-3 justify-center">
-                <button onClick={() => nav("contacts")} className="btn-white" style={{ padding: "13px 36px", fontSize: "0.95rem" }}>Получить расчёт</button>
-                <a href="https://t.me/+74993985002" target="_blank" rel="noopener noreferrer" className="btn-white-outline" style={{ padding: "13px 28px", fontSize: "0.95rem", textDecoration: "none" }}>
-                  <Icon name="Send" size={16} />Telegram
-                </a>
+          {/* CTA — светло-синий */}
+          <section style={{ background: "linear-gradient(135deg,#eff6ff 0%,#eef2ff 100%)", padding: "72px 0", borderTop: "1px solid #dbeafe" }}>
+            <div className="container mx-auto px-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+                <div>
+                  <h2 style={{ fontFamily: I, fontSize: "clamp(1.6rem,3vw,2.2rem)", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.025em", lineHeight: 1.2, marginBottom: 14 }}>
+                    Готовы провести<br />международный платёж?
+                  </h2>
+                  <p style={{ fontFamily: I, color: "#475569", lineHeight: 1.75, marginBottom: 28, maxWidth: 440 }}>
+                    Первичная консультация бесплатно. Расчёт комиссии и сроков — в течение 2 часов в рабочее время.
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    <button onClick={() => nav("contacts")} className="btn-primary" style={{ padding: "13px 32px", fontSize: "0.92rem" }}>Получить расчёт</button>
+                    <a href="https://t.me/+74993985002" target="_blank" rel="noopener noreferrer" className="btn-outline" style={{ padding: "12px 24px", fontSize: "0.92rem", textDecoration: "none" }}>
+                      <Icon name="Send" size={15} />Telegram
+                    </a>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {[
+                    { icon: "Clock", title: "30 минут", desc: "Ответим на заявку в рабочее время" },
+                    { icon: "Percent", title: "от 0.5%", desc: "Минимальная комиссия за перевод" },
+                    { icon: "Globe", title: "50+ стран", desc: "Собственная инфраструктура" },
+                    { icon: "ShieldCheck", title: "100% легально", desc: "Соответствие требованиям ЦБ РФ" },
+                  ].map((item, i) => (
+                    <div key={i} style={{ background: "#fff", borderRadius: 12, padding: "18px 20px", border: "1px solid #dbeafe", display: "flex", gap: 12, alignItems: "flex-start" }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 9, background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <Icon name={item.icon as any} size={17} style={{ color: "#2563eb" }} />
+                      </div>
+                      <div>
+                        <div style={{ fontFamily: I, fontWeight: 700, color: "#0f172a", fontSize: "0.9rem" }}>{item.title}</div>
+                        <div style={{ fontFamily: I, color: "#64748b", fontSize: "0.8rem", marginTop: 2 }}>{item.desc}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </section>
