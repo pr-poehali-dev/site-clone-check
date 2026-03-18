@@ -1,6 +1,24 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Icon from "@/components/ui/icon";
+
+// ── API URLs ─────────────────────────────────────────────────────────────
+const AUTH_URL  = "https://functions.poehali.dev/7c289e46-e8a8-4c96-99ad-263a6455d72f";
+const DATA_URL  = "https://functions.poehali.dev/3aad21f0-3c3d-4a2c-acf4-724687d855f1";
+
+async function apiAuth(action: string, body: object, token?: string) {
+  const h: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) h["X-Auth-Token"] = token;
+  const res = await fetch(AUTH_URL, { method: "POST", headers: h, body: JSON.stringify({ action, ...body }) });
+  return res.json();
+}
+
+async function apiData(action: string, body: object = {}, token?: string) {
+  const h: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) h["X-Auth-Token"] = token;
+  const res = await fetch(DATA_URL, { method: "POST", headers: h, body: JSON.stringify({ action, ...body }) });
+  return res.json();
+}
 
 type Section = "home" | "about" | "services" | "portfolio" | "blog" | "faq" | "contacts" | "cabinet";
 type CabinetTab = "dashboard" | "orders" | "documents" | "messages" | "rates" | "settings";
@@ -74,27 +92,12 @@ const BLOG_ITEMS = [
   { date: "20 февраля 2026", tag: "Криптовалюта", title: "USDT для ВЭД: легальные схемы конвертации для бизнеса", excerpt: "Правовой статус крипто-транзакций, актуальные инструменты и риски использования стейблкоинов в расчётах." },
 ];
 
-const ORDERS_DATA = [
-  { id: "PAY-8847", service: "Международный платёж", country: "🇨🇳 Китай",    amount: "$12,500",   status: "done",    date: "05.03.2026", manager: "Козлов В.А." },
-  { id: "PAY-8821", service: "FX операция",          country: "🇦🇪 ОАЭ",      amount: "AED 45,000", status: "active",  date: "14.03.2026", manager: "Лебедева О.С." },
-  { id: "PAY-8796", service: "Комплаенс",            country: "🇩🇪 Германия", amount: "€8,200",    status: "pending", date: "16.03.2026", manager: "Козлов В.А." },
-  { id: "PAY-8750", service: "Международный платёж", country: "🇹🇷 Турция",   amount: "$6,800",    status: "done",    date: "10.02.2026", manager: "Лебедева О.С." },
-];
-
-const MESSAGES_DATA = [
-  { from: "Козлов В.А.", role: "Персональный менеджер", text: "Добрый день! Платёж PAY-8821 в ОАЭ подтверждён банком-корреспондентом. Ожидайте зачисление в течение 24 часов.", time: "Сегодня, 10:42", unread: true },
-  { from: "Служба комплаенс", role: "Compliance", text: "По запросу PAY-8796: для завершения Due Diligence германского контрагента требуется выписка из торгового реестра (Handelsregister).", time: "Вчера, 16:15", unread: true },
-  { from: "Система", role: "Уведомление", text: "Платёж PAY-8847 в Китай успешно зачислен получателю. SWIFT-подтверждение загружено в раздел «Документы».", time: "05.03.2026", unread: false },
-];
-
-const DOCS_DATA = [
-  { name: "SWIFT-подтверждение PAY-8847", type: "PDF", size: "0.3 МБ", date: "05.03.2026" },
-  { name: "Инвойс — Китай (Supplier Ltd)",  type: "PDF", size: "0.8 МБ", date: "03.03.2026" },
-  { name: "Договор-оферта №2025-847",       type: "PDF", size: "1.2 МБ", date: "10.01.2026" },
-  { name: "Due Diligence отчёт — Германия", type: "PDF", size: "2.1 МБ", date: "14.03.2026" },
-  { name: "Акт об оказании услуг фев. 2026",type: "PDF", size: "0.4 МБ", date: "28.02.2026" },
-  { name: "Справка о вал. операциях Q1",    type: "XLSX",size: "0.6 МБ", date: "01.03.2026" },
-];
+// Cabinet types
+type CabinetUser = { id: number; email: string; contact_name: string; company: string; inn: string; phone: string; kpp: string; is_verified: boolean };
+type OrderItem = { id: number; order_num: string; service: string; country: string; amount: string; currency: string; status: string; manager: string; comment: string; date: string };
+type DocItem = { id: number; name: string; file_type: string; file_size: string; date: string };
+type MsgItem = { id: number; from_name: string; from_role: string; body: string; is_read: boolean; is_from_user: boolean; time: string };
+type Stats = { total_orders: number; active_orders: number; done_orders: number; unread_messages: number; docs_count: number; total_volume_usd: number };
 
 const I = "Inter, system-ui, sans-serif";
 
@@ -111,35 +114,158 @@ function StatusBadge({ status }: { status: string }) {
 export default function Index() {
   const [section, setSection]           = useState<Section>("home");
   const [mobileOpen, setMobileOpen]     = useState(false);
-  const [isLoggedIn, setIsLoggedIn]     = useState(false);
-  const [loginForm, setLoginForm]       = useState({ email: "", password: "" });
-  const [loginError, setLoginError]     = useState("");
   const [cabinetTab, setCabinetTab]     = useState<CabinetTab>("dashboard");
   const [contactForm, setContactForm]   = useState({ name: "", company: "", phone: "", email: "", message: "", service: "" });
   const [contactSent, setContactSent]   = useState(false);
   const [faqOpen, setFaqOpen]           = useState<number | null>(null);
+  const { rates, loading: rLoading }    = useCurrencyRates();
+
+  // ── Auth state ──
+  const [token, setToken]               = useState<string>(() => localStorage.getItem("cab_token") || "");
+  const [cabinetUser, setCabinetUser]   = useState<CabinetUser | null>(null);
+  const [loginForm, setLoginForm]       = useState({ email: "", password: "" });
+  const [loginError, setLoginError]     = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
   const [registerMode, setRegisterMode] = useState(false);
   const [regForm, setRegForm]           = useState({ name: "", company: "", inn: "", email: "", phone: "", password: "" });
   const [regDone, setRegDone]           = useState(false);
-  const { rates, loading: rLoading }    = useCurrencyRates();
+  const [regError, setRegError]         = useState("");
+
+  // ── Cabinet data ──
+  const [orders, setOrders]             = useState<OrderItem[]>([]);
+  const [docs, setDocs]                 = useState<DocItem[]>([]);
+  const [messages, setMessages]         = useState<MsgItem[]>([]);
+  const [stats, setStats]               = useState<Stats | null>(null);
+  const [dataLoading, setDataLoading]   = useState(false);
+
+  // ── Settings form ──
+  const [settingsForm, setSettingsForm] = useState({ contact_name: "", company: "", inn: "", phone: "", kpp: "" });
+  const [settingsSaved, setSettingsSaved] = useState(false);
+
+  // ── New message ──
+  const [newMsg, setNewMsg]             = useState("");
+  const [msgSending, setMsgSending]     = useState(false);
+
+  const isLoggedIn = !!cabinetUser;
+
+  // restore session on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("cab_token");
+    if (saved) {
+      apiAuth("me", {}, saved).then(d => {
+        if (d.user) { setCabinetUser(d.user); setToken(saved); }
+        else { localStorage.removeItem("cab_token"); setToken(""); }
+      }).catch(() => {});
+    }
+  }, []);
+
+  // load cabinet data when logged in + tab changes
+  const loadData = useCallback(async (tab: CabinetTab) => {
+    if (!token) return;
+    setDataLoading(true);
+    try {
+      if (tab === "dashboard") {
+        const [s, o, m] = await Promise.all([
+          apiData("stats", {}, token),
+          apiData("orders", {}, token),
+          apiData("messages", {}, token),
+        ]);
+        if (s.total_orders !== undefined) setStats(s);
+        if (o.orders) setOrders(o.orders);
+        if (m.messages) setMessages(m.messages);
+      } else if (tab === "orders") {
+        const d = await apiData("orders", {}, token);
+        if (d.orders) setOrders(d.orders);
+      } else if (tab === "documents") {
+        const d = await apiData("documents", {}, token);
+        if (d.documents) setDocs(d.documents);
+      } else if (tab === "messages") {
+        const d = await apiData("messages", {}, token);
+        if (d.messages) setMessages(d.messages);
+      }
+    } finally { setDataLoading(false); }
+  }, [token]);
+
+  useEffect(() => {
+    if (isLoggedIn && section === "cabinet") loadData(cabinetTab);
+  }, [isLoggedIn, section, cabinetTab, loadData]);
+
+  // sync settings form with user
+  useEffect(() => {
+    if (cabinetUser) setSettingsForm({
+      contact_name: cabinetUser.contact_name || "",
+      company: cabinetUser.company || "",
+      inn: cabinetUser.inn || "",
+      phone: cabinetUser.phone || "",
+      kpp: cabinetUser.kpp || "",
+    });
+  }, [cabinetUser]);
 
   const nav = (s: Section) => { setSection(s); setMobileOpen(false); window.scrollTo({ top: 0, behavior: "smooth" }); };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if ((loginForm.email === "jobtravel@bk.ru" && loginForm.password === "18081991") || (loginForm.email && loginForm.password.length >= 4)) {
-      setIsLoggedIn(true); setLoginError(""); setCabinetTab("dashboard");
-    } else {
-      setLoginError("Неверный email или пароль");
+    setLoginLoading(true); setLoginError("");
+    try {
+      const d = await apiAuth("login", { email: loginForm.email, password: loginForm.password });
+      if (d.token) {
+        localStorage.setItem("cab_token", d.token);
+        setToken(d.token);
+        setCabinetUser(d.user);
+        setCabinetTab("dashboard");
+      } else {
+        setLoginError(d.error || "Ошибка входа");
+      }
+    } catch { setLoginError("Ошибка соединения"); }
+    finally { setLoginLoading(false); }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRegError("");
+    const d = await apiAuth("register", {
+      email: regForm.email, password: regForm.password,
+      contact_name: regForm.name, company: regForm.company,
+      inn: regForm.inn, phone: regForm.phone,
+    });
+    if (d.success) setRegDone(true);
+    else setRegError(d.error || "Ошибка регистрации");
+  };
+
+  const handleLogout = async () => {
+    await apiAuth("logout", {}, token).catch(() => {});
+    localStorage.removeItem("cab_token");
+    setToken(""); setCabinetUser(null); setOrders([]); setDocs([]); setMessages([]); setStats(null);
+  };
+
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const d = await apiAuth("save_me", settingsForm, token);
+    if (d.success) {
+      setSettingsSaved(true);
+      setCabinetUser(prev => prev ? { ...prev, ...settingsForm } : prev);
+      setTimeout(() => setSettingsSaved(false), 3000);
     }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (regForm.name && regForm.email && regForm.password.length >= 6) setRegDone(true);
+  const handleSendMessage = async () => {
+    if (!newMsg.trim()) return;
+    setMsgSending(true);
+    await apiData("send_message", { body: newMsg }, token);
+    setNewMsg("");
+    const d = await apiData("messages", {}, token);
+    if (d.messages) setMessages(d.messages);
+    setMsgSending(false);
+  };
+
+  const handleMarkRead = async (ids: number[]) => {
+    await apiData("read_messages", { ids }, token);
+    setMessages(prev => prev.map(m => ids.includes(m.id) ? { ...m, is_read: true } : m));
   };
 
   const handleContact = (e: React.FormEvent) => { e.preventDefault(); setContactSent(true); };
+
+  const unreadCount = messages.filter(m => !m.is_read && !m.is_from_user).length;
 
   const navItems: { label: string; key: Section }[] = [
     { label: "Главная", key: "home" }, { label: "О компании", key: "about" },
@@ -721,9 +847,15 @@ export default function Index() {
                         <input type="password" required className="form-input" value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})} placeholder="••••••••" />
                       </div>
                       {loginError && <p style={{ fontFamily: I, fontSize: "0.85rem", color: "#dc2626" }}>{loginError}</p>}
-                      <button type="submit" className="btn-primary" style={{ padding: "12px 0", justifyContent: "center", width: "100%" }}>Войти</button>
+                      <button type="submit" className="btn-primary" style={{ padding: "12px 0", justifyContent: "center", width: "100%" }} disabled={loginLoading}>
+                        {loginLoading ? "Вход..." : "Войти"}
+                      </button>
                       <div style={{ textAlign: "center" }}>
                         <button type="button" onClick={() => setRegisterMode(true)} style={{ fontFamily: I, fontSize: "0.85rem", color: "#2563eb", background: "none", border: "none", cursor: "pointer" }}>Нет аккаунта? Зарегистрироваться</button>
+                      </div>
+                      <div style={{ textAlign: "center", padding: "8px 12px", background: "#f9fafb", borderRadius: 8, border: "1px solid #e5e7eb" }}>
+                        <span style={{ fontFamily: I, fontSize: "0.78rem", color: "#9ca3af" }}>Демо-доступ: </span>
+                        <span style={{ fontFamily: I, fontSize: "0.78rem", color: "#6b7280", fontWeight: 500 }}>demo@vedagent.ru / demo1234</span>
                       </div>
                     </form>
                   </div>
@@ -756,6 +888,7 @@ export default function Index() {
                               <input type={f.type} required className="form-input" value={(regForm as any)[f.key]} onChange={e => setRegForm({...regForm, [f.key]: e.target.value})} placeholder={f.ph} />
                             </div>
                           ))}
+                          {regError && <p style={{ fontFamily: I, fontSize: "0.85rem", color: "#dc2626" }}>{regError}</p>}
                           <button type="submit" className="btn-primary" style={{ padding: "12px 0", justifyContent: "center", width: "100%", marginTop: 4 }}>Подать заявку</button>
                           <div style={{ textAlign: "center" }}>
                             <button type="button" onClick={() => setRegisterMode(false)} style={{ fontFamily: I, fontSize: "0.85rem", color: "#2563eb", background: "none", border: "none", cursor: "pointer" }}>Уже есть аккаунт? Войти</button>
@@ -775,12 +908,13 @@ export default function Index() {
                   <aside className="lg:w-56 flex-shrink-0">
                     <div style={{ background: "#fff", borderRadius: 12, padding: "16px 14px", border: "1px solid #e5e7eb", marginBottom: 12 }}>
                       <div style={{ width: 44, height: 44, borderRadius: "50%", background: "linear-gradient(135deg,#2563eb,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: I, fontSize: "1.1rem", fontWeight: 700, color: "#fff", marginBottom: 10 }}>
-                        {loginForm.email[0]?.toUpperCase() || "U"}
+                        {cabinetUser?.email[0]?.toUpperCase() || "U"}
                       </div>
-                      <div style={{ fontFamily: I, fontWeight: 600, color: "#111827", fontSize: "0.85rem", wordBreak: "break-all" }}>{loginForm.email}</div>
+                      <div style={{ fontFamily: I, fontWeight: 600, color: "#111827", fontSize: "0.85rem" }}>{cabinetUser?.contact_name || cabinetUser?.email}</div>
+                      <div style={{ fontFamily: I, fontSize: "0.75rem", color: "#9ca3af", marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{cabinetUser?.email}</div>
                       <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 4 }}>
-                        <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#16a34a" }} />
-                        <span style={{ fontFamily: I, fontSize: "0.72rem", color: "#6b7280" }}>Верифицирован</span>
+                        <div style={{ width: 6, height: 6, borderRadius: "50%", background: cabinetUser?.is_verified ? "#16a34a" : "#f59e0b" }} />
+                        <span style={{ fontFamily: I, fontSize: "0.72rem", color: "#6b7280" }}>{cabinetUser?.is_verified ? "Верифицирован" : "Ожидает верификации"}</span>
                       </div>
                     </div>
                     <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", overflow: "hidden", padding: "8px" }}>
@@ -788,7 +922,7 @@ export default function Index() {
                         { key: "dashboard", icon: "LayoutDashboard", label: "Обзор" },
                         { key: "orders",    icon: "ArrowLeftRight",  label: "Платежи" },
                         { key: "documents", icon: "FolderOpen",      label: "Документы" },
-                        { key: "messages",  icon: "MessageSquare",   label: "Сообщения", badge: 2 },
+                        { key: "messages",  icon: "MessageSquare",   label: "Сообщения", badge: unreadCount || undefined },
                         { key: "rates",     icon: "TrendingUp",      label: "Курсы валют" },
                         { key: "settings",  icon: "Settings",        label: "Настройки" },
                       ] as Array<{ key: CabinetTab; icon: string; label: string; badge?: number }>).map(item => (
@@ -799,7 +933,7 @@ export default function Index() {
                         </button>
                       ))}
                       <div style={{ borderTop: "1px solid #f3f4f6", marginTop: 4, paddingTop: 4 }}>
-                        <button onClick={() => setIsLoggedIn(false)} className="sidebar-item" style={{ color: "#dc2626" }}>
+                        <button onClick={handleLogout} className="sidebar-item" style={{ color: "#dc2626" }}>
                           <Icon name="LogOut" size={16} /><span>Выйти</span>
                         </button>
                       </div>
@@ -812,46 +946,55 @@ export default function Index() {
                     {cabinetTab === "dashboard" && (
                       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                          <h2 style={{ fontFamily: I, fontSize: "1.4rem", fontWeight: 800, color: "#111827" }}>Обзор</h2>
+                          <h2 style={{ fontFamily: I, fontSize: "1.4rem", fontWeight: 800, color: "#111827" }}>
+                            Добро пожаловать, {cabinetUser?.contact_name?.split(" ")[0] || ""}!
+                          </h2>
                           <button onClick={() => nav("contacts")} className="btn-primary" style={{ padding: "8px 18px", fontSize: "0.82rem" }}>+ Новый платёж</button>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                          {[
-                            { icon: "ArrowLeftRight", label: "Всего платежей", val: "4",    sub: "за всё время", color: "#2563eb", bg: "#eff6ff" },
-                            { icon: "Clock",          label: "В процессе",     val: "2",    sub: "активных",    color: "#d97706", bg: "#fffbeb" },
-                            { icon: "CheckCircle",    label: "Исполнено",      val: "2",    sub: "успешных",    color: "#16a34a", bg: "#f0fdf4" },
-                            { icon: "DollarSign",     label: "Объём",          val: "$27.5k", sub: "всего",    color: "#7c3aed", bg: "#f5f3ff" },
-                          ].map((s, i) => (
-                            <div key={i} style={{ background: "#fff", borderRadius: 12, padding: "20px 18px", border: "1px solid #e5e7eb" }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                                <div style={{ width: 32, height: 32, borderRadius: 8, background: s.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                  <Icon name={s.icon as any} size={15} style={{ color: s.color }} />
+                        {dataLoading && !stats ? (
+                          <div style={{ fontFamily: I, color: "#9ca3af", padding: "20px 0" }}>Загрузка...</div>
+                        ) : (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                            {[
+                              { icon: "ArrowLeftRight", label: "Всего платежей", val: String(stats?.total_orders ?? 0),   sub: "за всё время", color: "#2563eb", bg: "#eff6ff" },
+                              { icon: "Clock",          label: "В процессе",     val: String(stats?.active_orders ?? 0),  sub: "активных",    color: "#d97706", bg: "#fffbeb" },
+                              { icon: "CheckCircle",    label: "Исполнено",      val: String(stats?.done_orders ?? 0),    sub: "успешных",    color: "#16a34a", bg: "#f0fdf4" },
+                              { icon: "DollarSign",     label: "Объём",          val: `$${((stats?.total_volume_usd ?? 0)/1000).toFixed(1)}k`, sub: "исполнено", color: "#7c3aed", bg: "#f5f3ff" },
+                            ].map((s, i) => (
+                              <div key={i} style={{ background: "#fff", borderRadius: 12, padding: "20px 18px", border: "1px solid #e5e7eb" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                                  <div style={{ width: 32, height: 32, borderRadius: 8, background: s.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                    <Icon name={s.icon as any} size={15} style={{ color: s.color }} />
+                                  </div>
+                                  <span style={{ fontFamily: I, fontSize: "0.8rem", color: "#6b7280" }}>{s.label}</span>
                                 </div>
-                                <span style={{ fontFamily: I, fontSize: "0.8rem", color: "#6b7280" }}>{s.label}</span>
+                                <div style={{ fontFamily: I, fontSize: "1.8rem", fontWeight: 800, color: "#111827", letterSpacing: "-0.03em", lineHeight: 1 }}>{s.val}</div>
+                                <div style={{ fontFamily: I, fontSize: "0.72rem", color: "#9ca3af", marginTop: 4 }}>{s.sub}</div>
                               </div>
-                              <div style={{ fontFamily: I, fontSize: "1.8rem", fontWeight: 800, color: "#111827", letterSpacing: "-0.03em", lineHeight: 1 }}>{s.val}</div>
-                              <div style={{ fontFamily: I, fontSize: "0.72rem", color: "#9ca3af", marginTop: 4 }}>{s.sub}</div>
-                            </div>
-                          ))}
-                        </div>
+                            ))}
+                          </div>
+                        )}
                         <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", overflow: "hidden" }}>
                           <div style={{ padding: "16px 20px", borderBottom: "1px solid #f3f4f6", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                             <span style={{ fontFamily: I, fontWeight: 700, color: "#111827", fontSize: "0.95rem" }}>Последние платежи</span>
                             <button onClick={() => setCabinetTab("orders")} style={{ fontFamily: I, fontSize: "0.82rem", color: "#2563eb", background: "none", border: "none", cursor: "pointer" }}>Все →</button>
                           </div>
-                          {ORDERS_DATA.slice(0, 3).map((o, i) => (
-                            <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", gap: 12, borderBottom: i < 2 ? "1px solid #f9fafb" : "none" }}>
+                          {orders.length === 0 && !dataLoading && (
+                            <div style={{ padding: "24px 20px", fontFamily: I, color: "#9ca3af", fontSize: "0.875rem" }}>Платежей пока нет</div>
+                          )}
+                          {orders.slice(0, 3).map((o, i) => (
+                            <div key={o.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", gap: 12, borderBottom: i < Math.min(orders.length, 3) - 1 ? "1px solid #f9fafb" : "none" }}>
                               <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
                                 <div style={{ width: 36, height: 36, borderRadius: 8, background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                                   <Icon name="Globe" size={15} style={{ color: "#2563eb" }} />
                                 </div>
                                 <div style={{ minWidth: 0 }}>
                                   <div style={{ fontFamily: I, fontWeight: 600, color: "#111827", fontSize: "0.875rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{o.country} · {o.service}</div>
-                                  <div style={{ fontFamily: I, fontSize: "0.75rem", color: "#9ca3af" }}>{o.id} · {o.date}</div>
+                                  <div style={{ fontFamily: I, fontSize: "0.75rem", color: "#9ca3af" }}>{o.order_num} · {o.date}</div>
                                 </div>
                               </div>
                               <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-                                <span style={{ fontFamily: I, fontWeight: 700, color: "#111827", fontSize: "0.9rem" }}>{o.amount}</span>
+                                <span style={{ fontFamily: I, fontWeight: 700, color: "#111827", fontSize: "0.9rem" }}>{o.amount} {o.currency}</span>
                                 <StatusBadge status={o.status} />
                               </div>
                             </div>
@@ -862,12 +1005,15 @@ export default function Index() {
                             <span style={{ fontFamily: I, fontWeight: 700, color: "#111827", fontSize: "0.95rem" }}>Новые сообщения</span>
                             <button onClick={() => setCabinetTab("messages")} style={{ fontFamily: I, fontSize: "0.82rem", color: "#2563eb", background: "none", border: "none", cursor: "pointer" }}>Все →</button>
                           </div>
-                          {MESSAGES_DATA.filter(m => m.unread).map((msg, i) => (
-                            <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "14px 20px", borderBottom: "1px solid #f9fafb" }}>
-                              <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg,#2563eb,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: I, fontWeight: 700, color: "#fff", fontSize: "0.9rem", flexShrink: 0 }}>{msg.from[0]}</div>
+                          {messages.filter(m => !m.is_read && !m.is_from_user).length === 0 && (
+                            <div style={{ padding: "24px 20px", fontFamily: I, color: "#9ca3af", fontSize: "0.875rem" }}>Нет новых сообщений</div>
+                          )}
+                          {messages.filter(m => !m.is_read && !m.is_from_user).slice(0, 2).map((msg) => (
+                            <div key={msg.id} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "14px 20px", borderBottom: "1px solid #f9fafb" }}>
+                              <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg,#2563eb,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: I, fontWeight: 700, color: "#fff", fontSize: "0.9rem", flexShrink: 0 }}>{msg.from_name[0]}</div>
                               <div>
-                                <div style={{ fontFamily: I, fontWeight: 600, color: "#111827", fontSize: "0.85rem" }}>{msg.from}</div>
-                                <p style={{ fontFamily: I, color: "#6b7280", fontSize: "0.82rem", lineHeight: 1.5, marginTop: 2 }}>{msg.text.slice(0, 100)}…</p>
+                                <div style={{ fontFamily: I, fontWeight: 600, color: "#111827", fontSize: "0.85rem" }}>{msg.from_name}</div>
+                                <p style={{ fontFamily: I, color: "#6b7280", fontSize: "0.82rem", lineHeight: 1.5, marginTop: 2 }}>{msg.body.slice(0, 100)}…</p>
                               </div>
                             </div>
                           ))}
@@ -881,78 +1027,124 @@ export default function Index() {
                           <h2 style={{ fontFamily: I, fontSize: "1.4rem", fontWeight: 800, color: "#111827" }}>Мои платежи</h2>
                           <button onClick={() => nav("contacts")} className="btn-primary" style={{ padding: "8px 18px", fontSize: "0.82rem" }}>+ Новый платёж</button>
                         </div>
-                        <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", overflow: "hidden" }}>
-                          <div style={{ overflowX: "auto" }}>
-                            <table className="data-table" style={{ width: "100%", borderCollapse: "collapse" }}>
-                              <thead><tr>{["ID","Услуга","Направление","Сумма","Менеджер","Дата","Статус"].map(h=><th key={h}>{h}</th>)}</tr></thead>
-                              <tbody>
-                                {ORDERS_DATA.map((o, i) => (
-                                  <tr key={i}>
-                                    <td style={{ color: "#2563eb", fontWeight: 600 }}>{o.id}</td>
-                                    <td>{o.service}</td>
-                                    <td style={{ whiteSpace: "nowrap" }}>{o.country}</td>
-                                    <td style={{ fontWeight: 700, color: "#111827", whiteSpace: "nowrap" }}>{o.amount}</td>
-                                    <td style={{ whiteSpace: "nowrap" }}>{o.manager}</td>
-                                    <td style={{ whiteSpace: "nowrap" }}>{o.date}</td>
-                                    <td><StatusBadge status={o.status} /></td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
+                        {dataLoading ? (
+                          <div style={{ fontFamily: I, color: "#9ca3af", padding: "20px 0" }}>Загрузка...</div>
+                        ) : orders.length === 0 ? (
+                          <div style={{ background: "#fff", borderRadius: 12, padding: "40px 24px", border: "1px solid #e5e7eb", textAlign: "center" }}>
+                            <Icon name="ArrowLeftRight" size={32} style={{ color: "#d1d5db", margin: "0 auto 12px" }} />
+                            <p style={{ fontFamily: I, color: "#9ca3af" }}>Платежей пока нет</p>
+                            <button onClick={() => nav("contacts")} className="btn-primary" style={{ marginTop: 16, padding: "9px 24px" }}>Создать первый платёж</button>
                           </div>
-                        </div>
+                        ) : (
+                          <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+                            <div style={{ overflowX: "auto" }}>
+                              <table className="data-table" style={{ width: "100%", borderCollapse: "collapse" }}>
+                                <thead><tr>{["ID","Услуга","Направление","Сумма","Менеджер","Дата","Статус"].map(h=><th key={h}>{h}</th>)}</tr></thead>
+                                <tbody>
+                                  {orders.map((o) => (
+                                    <tr key={o.id}>
+                                      <td style={{ color: "#2563eb", fontWeight: 600 }}>{o.order_num}</td>
+                                      <td>{o.service}</td>
+                                      <td style={{ whiteSpace: "nowrap" }}>{o.country}</td>
+                                      <td style={{ fontWeight: 700, color: "#111827", whiteSpace: "nowrap" }}>{o.amount} {o.currency}</td>
+                                      <td style={{ whiteSpace: "nowrap" }}>{o.manager}</td>
+                                      <td style={{ whiteSpace: "nowrap" }}>{o.date}</td>
+                                      <td><StatusBadge status={o.status} /></td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
 
                     {cabinetTab === "documents" && (
                       <div>
                         <h2 style={{ fontFamily: I, fontSize: "1.4rem", fontWeight: 800, color: "#111827", marginBottom: 20 }}>Документы</h2>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                          {DOCS_DATA.map((doc, i) => (
-                            <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#fff", borderRadius: 10, padding: "14px 18px", border: "1px solid #e5e7eb" }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                                <div style={{ width: 36, height: 36, borderRadius: 8, background: doc.type === "PDF" ? "#fef2f2" : "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                  <Icon name="FileText" size={16} style={{ color: doc.type === "PDF" ? "#dc2626" : "#2563eb" }} />
+                        {dataLoading ? (
+                          <div style={{ fontFamily: I, color: "#9ca3af", padding: "20px 0" }}>Загрузка...</div>
+                        ) : docs.length === 0 ? (
+                          <div style={{ background: "#fff", borderRadius: 12, padding: "40px 24px", border: "1px solid #e5e7eb", textAlign: "center" }}>
+                            <Icon name="FolderOpen" size={32} style={{ color: "#d1d5db", margin: "0 auto 12px" }} />
+                            <p style={{ fontFamily: I, color: "#9ca3af" }}>Документов пока нет</p>
+                          </div>
+                        ) : (
+                          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                            {docs.map((doc) => (
+                              <div key={doc.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#fff", borderRadius: 10, padding: "14px 18px", border: "1px solid #e5e7eb" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                                  <div style={{ width: 36, height: 36, borderRadius: 8, background: doc.file_type === "PDF" ? "#fef2f2" : "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                    <Icon name="FileText" size={16} style={{ color: doc.file_type === "PDF" ? "#dc2626" : "#2563eb" }} />
+                                  </div>
+                                  <div>
+                                    <div style={{ fontFamily: I, fontWeight: 500, color: "#111827", fontSize: "0.875rem" }}>{doc.name}</div>
+                                    <div style={{ fontFamily: I, fontSize: "0.72rem", color: "#9ca3af", marginTop: 2 }}>{doc.file_type} · {doc.file_size} · {doc.date}</div>
+                                  </div>
                                 </div>
-                                <div>
-                                  <div style={{ fontFamily: I, fontWeight: 500, color: "#111827", fontSize: "0.875rem" }}>{doc.name}</div>
-                                  <div style={{ fontFamily: I, fontSize: "0.72rem", color: "#9ca3af", marginTop: 2 }}>{doc.type} · {doc.size} · {doc.date}</div>
-                                </div>
+                                <button style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: I, fontSize: "0.83rem", fontWeight: 600, color: "#2563eb", background: "none", border: "none", cursor: "pointer", flexShrink: 0 }}>
+                                  <Icon name="Download" size={14} />Скачать
+                                </button>
                               </div>
-                              <button style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: I, fontSize: "0.83rem", fontWeight: 600, color: "#2563eb", background: "none", border: "none", cursor: "pointer", flexShrink: 0 }}>
-                                <Icon name="Download" size={14} />Скачать
-                              </button>
-                            </div>
-                          ))}
-                        </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
 
                     {cabinetTab === "messages" && (
                       <div>
-                        <h2 style={{ fontFamily: I, fontSize: "1.4rem", fontWeight: 800, color: "#111827", marginBottom: 20 }}>Сообщения</h2>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                          {MESSAGES_DATA.map((msg, i) => (
-                            <div key={i} style={{ background: "#fff", borderRadius: 12, padding: "18px 20px", border: msg.unread ? "1.5px solid #bfdbfe" : "1px solid #e5e7eb" }}>
-                              <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-                                <div style={{ width: 40, height: 40, borderRadius: "50%", background: "linear-gradient(135deg,#2563eb,#4f46e5)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: I, fontWeight: 700, color: "#fff", flexShrink: 0 }}>{msg.from[0]}</div>
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, marginBottom: 6 }}>
-                                    <span style={{ fontFamily: I, fontWeight: 700, color: "#111827", fontSize: "0.875rem" }}>{msg.from}</span>
-                                    <span style={{ fontFamily: I, fontSize: "0.75rem", color: "#9ca3af" }}>{msg.role}</span>
-                                    {msg.unread && <span style={{ marginLeft: "auto", background: "#2563eb", color: "#fff", fontSize: "0.68rem", fontWeight: 700, padding: "2px 8px", borderRadius: 100, fontFamily: I }}>Новое</span>}
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+                          <h2 style={{ fontFamily: I, fontSize: "1.4rem", fontWeight: 800, color: "#111827" }}>Сообщения</h2>
+                          {unreadCount > 0 && (
+                            <button onClick={() => handleMarkRead(messages.filter(m => !m.is_read && !m.is_from_user).map(m => m.id))}
+                              style={{ fontFamily: I, fontSize: "0.82rem", color: "#2563eb", background: "none", border: "none", cursor: "pointer" }}>
+                              Отметить все прочитанными
+                            </button>
+                          )}
+                        </div>
+                        {dataLoading ? (
+                          <div style={{ fontFamily: I, color: "#9ca3af", padding: "20px 0" }}>Загрузка...</div>
+                        ) : (
+                          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                            {messages.map((msg) => (
+                              <div key={msg.id}
+                                style={{ background: "#fff", borderRadius: 12, padding: "18px 20px",
+                                  border: (!msg.is_read && !msg.is_from_user) ? "1.5px solid #bfdbfe" : "1px solid #e5e7eb" }}>
+                                <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                                  <div style={{ width: 40, height: 40, borderRadius: "50%",
+                                    background: msg.is_from_user ? "#f3f4f6" : "linear-gradient(135deg,#2563eb,#4f46e5)",
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    fontFamily: I, fontWeight: 700,
+                                    color: msg.is_from_user ? "#374151" : "#fff", flexShrink: 0 }}>
+                                    {msg.from_name[0]}
                                   </div>
-                                  <p style={{ fontFamily: I, color: "#4b5563", fontSize: "0.875rem", lineHeight: 1.65 }}>{msg.text}</p>
-                                  <div style={{ fontFamily: I, fontSize: "0.72rem", color: "#9ca3af", marginTop: 8 }}>{msg.time}</div>
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, marginBottom: 6 }}>
+                                      <span style={{ fontFamily: I, fontWeight: 700, color: "#111827", fontSize: "0.875rem" }}>{msg.from_name}</span>
+                                      <span style={{ fontFamily: I, fontSize: "0.75rem", color: "#9ca3af" }}>{msg.from_role}</span>
+                                      {!msg.is_read && !msg.is_from_user && (
+                                        <span style={{ marginLeft: "auto", background: "#2563eb", color: "#fff", fontSize: "0.68rem", fontWeight: 700, padding: "2px 8px", borderRadius: 100, fontFamily: I }}>Новое</span>
+                                      )}
+                                    </div>
+                                    <p style={{ fontFamily: I, color: "#4b5563", fontSize: "0.875rem", lineHeight: 1.65 }}>{msg.body}</p>
+                                    <div style={{ fontFamily: I, fontSize: "0.72rem", color: "#9ca3af", marginTop: 8 }}>{msg.time}</div>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          ))}
-                        </div>
+                            ))}
+                          </div>
+                        )}
                         <div style={{ background: "#fff", borderRadius: 12, padding: "18px 20px", border: "1px solid #e5e7eb", marginTop: 12 }}>
                           <label className="form-label">Написать менеджеру</label>
-                          <textarea rows={3} className="form-input" style={{ resize: "none" } as any} placeholder="Напишите ваш вопрос..." />
-                          <button className="btn-primary" style={{ marginTop: 10, padding: "9px 20px", fontSize: "0.85rem" }}>Отправить</button>
+                          <textarea rows={3} className="form-input" style={{ resize: "none" } as any}
+                            value={newMsg} onChange={e => setNewMsg(e.target.value)}
+                            placeholder="Напишите ваш вопрос..." />
+                          <button className="btn-primary" style={{ marginTop: 10, padding: "9px 20px", fontSize: "0.85rem" }}
+                            onClick={handleSendMessage} disabled={msgSending || !newMsg.trim()}>
+                            {msgSending ? "Отправка..." : "Отправить"}
+                          </button>
                         </div>
                       </div>
                     )}
@@ -1002,27 +1194,52 @@ export default function Index() {
                         <h2 style={{ fontFamily: I, fontSize: "1.4rem", fontWeight: 800, color: "#111827", marginBottom: 20 }}>Настройки профиля</h2>
                         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                           <div style={{ background: "#fff", borderRadius: 12, padding: "24px 22px", border: "1px solid #e5e7eb" }}>
-                            <div style={{ fontFamily: I, fontWeight: 700, color: "#111827", marginBottom: 18, fontSize: "0.95rem" }}>Данные компании</div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              {[{label:"Контактное лицо",val:"Пользователь"},{label:"Email",val:loginForm.email},{label:"Телефон",val:""},{label:"Компания",val:""},{label:"ИНН",val:""},{label:"КПП",val:""}].map((f,i)=>(
-                                <div key={i}>
-                                  <label className="form-label">{f.label}</label>
-                                  <input defaultValue={f.val} className="form-input" />
-                                </div>
-                              ))}
+                            <div style={{ fontFamily: I, fontWeight: 700, color: "#111827", marginBottom: 18, fontSize: "0.95rem" }}>Данные аккаунта</div>
+                            <div style={{ padding: "10px 14px", background: "#f9fafb", borderRadius: 8, border: "1px solid #e5e7eb", marginBottom: 16 }}>
+                              <div style={{ fontFamily: I, fontSize: "0.72rem", color: "#9ca3af", marginBottom: 2 }}>EMAIL</div>
+                              <div style={{ fontFamily: I, color: "#111827", fontWeight: 500 }}>{cabinetUser?.email}</div>
                             </div>
-                            <button className="btn-primary" style={{ marginTop: 20, padding: "10px 24px" }}>Сохранить</button>
+                            <form onSubmit={handleSaveSettings}>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {[
+                                  { label: "Контактное лицо", key: "contact_name", ph: "Иванов Александр" },
+                                  { label: "Телефон",         key: "phone",         ph: "+7 (___) ___-__-__" },
+                                  { label: "Компания",        key: "company",       ph: "ООО «Компания»" },
+                                  { label: "ИНН",             key: "inn",           ph: "7714123456" },
+                                  { label: "КПП",             key: "kpp",           ph: "771401001" },
+                                ].map((f) => (
+                                  <div key={f.key}>
+                                    <label className="form-label">{f.label}</label>
+                                    <input className="form-input"
+                                      value={(settingsForm as any)[f.key]}
+                                      onChange={e => setSettingsForm({ ...settingsForm, [f.key]: e.target.value })}
+                                      placeholder={f.ph} />
+                                  </div>
+                                ))}
+                              </div>
+                              <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 20 }}>
+                                <button type="submit" className="btn-primary" style={{ padding: "10px 24px" }}>Сохранить изменения</button>
+                                {settingsSaved && (
+                                  <span style={{ fontFamily: I, fontSize: "0.875rem", color: "#16a34a", display: "flex", alignItems: "center", gap: 5 }}>
+                                    <Icon name="CheckCircle" size={15} style={{ color: "#16a34a" }} />Сохранено
+                                  </span>
+                                )}
+                              </div>
+                            </form>
                           </div>
                           <div style={{ background: "#fff", borderRadius: 12, padding: "24px 22px", border: "1px solid #e5e7eb" }}>
-                            <div style={{ fontFamily: I, fontWeight: 700, color: "#111827", marginBottom: 18, fontSize: "0.95rem" }}>Уведомления</div>
-                            {[{label:"Email-уведомления об исполнении платежей",on:true},{label:"SMS при смене статуса заявки",on:true},{label:"Еженедельный отчёт по курсам валют",on:false}].map((n,i)=>(
-                              <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid #f3f4f6" }}>
-                                <span style={{ fontFamily: I, fontSize: "0.875rem", color: "#374151" }}>{n.label}</span>
-                                <div style={{ width: 40, height: 22, borderRadius: 100, background: n.on ? "#2563eb" : "#d1d5db", cursor: "pointer", display: "flex", alignItems: "center", padding: "0 3px" }}>
-                                  <div style={{ width: 16, height: 16, borderRadius: "50%", background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.2)", transform: n.on ? "translateX(18px)" : "translateX(0)", transition: "transform 0.2s" }} />
+                            <div style={{ fontFamily: I, fontWeight: 700, color: "#111827", marginBottom: 18, fontSize: "0.95rem" }}>Верификация</div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 16px", borderRadius: 8, background: cabinetUser?.is_verified ? "#f0fdf4" : "#fffbeb", border: `1px solid ${cabinetUser?.is_verified ? "#bbf7d0" : "#fde68a"}` }}>
+                              <Icon name={cabinetUser?.is_verified ? "ShieldCheck" : "Clock"} size={18} style={{ color: cabinetUser?.is_verified ? "#16a34a" : "#d97706" }} />
+                              <div>
+                                <div style={{ fontFamily: I, fontWeight: 600, color: "#111827", fontSize: "0.875rem" }}>
+                                  {cabinetUser?.is_verified ? "KYC-верификация пройдена" : "Ожидает KYC-верификации"}
+                                </div>
+                                <div style={{ fontFamily: I, fontSize: "0.78rem", color: "#6b7280", marginTop: 2 }}>
+                                  {cabinetUser?.is_verified ? "Доступны все операции" : "Срок верификации — 1 рабочий день после подачи документов"}
                                 </div>
                               </div>
-                            ))}
+                            </div>
                           </div>
                         </div>
                       </div>
