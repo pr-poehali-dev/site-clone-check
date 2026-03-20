@@ -22,7 +22,63 @@ action=offer_withdraw    { offer_id }
 action=offers_export     — данные для экспорта (ADMIN/OWNER)
 """
 import json, os, psycopg2, boto3, base64, uuid, mimetypes
+import smtplib, ssl
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from datetime import datetime, timezone, timedelta
+
+
+def send_email(to_email: str, subject: str, html_body: str) -> None:
+    try:
+        smtp_host = os.environ.get("SMTP_HOST", "")
+        smtp_port = int(os.environ.get("SMTP_PORT", "465"))
+        smtp_user = os.environ.get("SMTP_USER", "")
+        smtp_pass = os.environ.get("SMTP_PASSWORD", "")
+        if not smtp_host or not smtp_user or not smtp_pass:
+            return
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = f"ВалютаПэй <{smtp_user}>"
+        msg["To"] = to_email
+        msg.attach(MIMEText(html_body, "html", "utf-8"))
+        ctx = ssl.create_default_context()
+        if smtp_port == 465:
+            with smtplib.SMTP_SSL(smtp_host, smtp_port, context=ctx, timeout=10) as s:
+                s.login(smtp_user, smtp_pass)
+                s.sendmail(smtp_user, to_email, msg.as_string())
+        else:
+            with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as s:
+                s.starttls(context=ctx)
+                s.login(smtp_user, smtp_pass)
+                s.sendmail(smtp_user, to_email, msg.as_string())
+    except Exception:
+        pass
+
+
+def email_html(title: str, body_html: str, cta_text: str = "", cta_url: str = "") -> str:
+    cta = f"""<div style="margin-top:24px;text-align:center">
+      <a href="{cta_url}" style="display:inline-block;padding:12px 28px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px">{cta_text}</a>
+    </div>""" if cta_text and cta_url else ""
+    return f"""<!DOCTYPE html><html><body style="margin:0;background:#f8fafc;font-family:sans-serif">
+<div style="max-width:520px;margin:32px auto;background:#fff;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0">
+  <div style="background:#2563eb;padding:20px 28px">
+    <div style="font-size:20px;font-weight:800;color:#fff">ВалютаПэй</div>
+  </div>
+  <div style="padding:28px">
+    <h2 style="margin:0 0 14px;font-size:18px;color:#1e293b">{title}</h2>
+    <div style="font-size:15px;color:#374151;line-height:1.6">{body_html}</div>
+    {cta}
+  </div>
+  <div style="padding:16px 28px;background:#f8fafc;border-top:1px solid #e2e8f0;font-size:12px;color:#94a3b8">
+    Это автоматическое уведомление. Не отвечайте на это письмо.
+  </div>
+</div></body></html>"""
+
+
+def get_user_email(cur, user_id: int) -> str:
+    cur.execute("SELECT email, contact_name FROM cabinet_users WHERE id = %s", (user_id,))
+    row = cur.fetchone()
+    return (row[0] or "", row[1] or "") if row else ("", "")
 
 
 def get_conn():
@@ -427,6 +483,21 @@ def handler(event: dict, context) -> dict:
                 notify(cur, agent_user[0], "offer_selected", "Ваше предложение выбрано!",
                        "Клиент выбрал ваше предложение. Теперь вам доступны контакты клиента.",
                        {"request_id": request_id, "offer_id": offer_id})
+                a_email, a_name = get_user_email(cur, agent_user[0])
+                if a_email:
+                    # Получаем сумму заявки для письма
+                    cur.execute("SELECT amount, currency FROM lk_requests WHERE id = %s", (request_id,))
+                    req_info = cur.fetchone()
+                    amount_str = f"{req_info[0]:,.2f} {req_info[1]}" if req_info else ""
+                    send_email(a_email, "✓ Ваше предложение выбрано — ВалютаПэй",
+                        email_html(
+                            f"Поздравляем, {a_name or 'агент'}!",
+                            f"Клиент выбрал ваше предложение по заявке на сумму <strong>{amount_str}</strong>.<br><br>"
+                            "Теперь вам доступны контактные данные клиента для согласования деталей.<br><br>"
+                            "Ожидайте подтверждения оплаты от клиента.",
+                            "Открыть заявку",
+                            f"https://poehali.dev/lk/agent/requests/{request_id}"
+                        ))
             conn.commit()
             return resp(200, {"success": True})
 
@@ -454,6 +525,20 @@ def handler(event: dict, context) -> dict:
                     notify(cur, agent_user[0], "payment_done", "Клиент подтвердил оплату",
                            "Клиент отметил заявку как оплаченную.",
                            {"request_id": request_id})
+                    a_email, a_name = get_user_email(cur, agent_user[0])
+                    if a_email:
+                        cur.execute("SELECT amount, currency FROM lk_requests WHERE id = %s", (request_id,))
+                        req_info = cur.fetchone()
+                        amount_str = f"{req_info[0]:,.2f} {req_info[1]}" if req_info else ""
+                        send_email(a_email, "✓ Клиент подтвердил оплату — ВалютаПэй",
+                            email_html(
+                                f"Оплата подтверждена, {a_name or 'агент'}!",
+                                f"Клиент отметил заявку на сумму <strong>{amount_str}</strong> как оплаченную "
+                                "и прикрепил платёжные документы.<br><br>"
+                                "Проверьте документы и завершите сделку.",
+                                "Открыть заявку",
+                                f"https://poehali.dev/lk/agent/requests/{request_id}"
+                            ))
             conn.commit()
             return resp(200, {"success": True})
 
@@ -695,6 +780,18 @@ def handler(event: dict, context) -> dict:
                 notify(cur, client_row[0], "new_offer", "Новое предложение по заявке",
                        f"Получено новое предложение: {percent_fee}% комиссии, срок {duration_workdays} р. дней.",
                        {"request_id": request_id, "offer_id": new_offer_id})
+                c_email, c_name = get_user_email(cur, client_row[0])
+                if c_email:
+                    send_email(c_email, "Новое предложение по вашей заявке — ВалютаПэй",
+                        email_html(
+                            f"Новое предложение, {c_name or 'уважаемый клиент'}!",
+                            f"По вашей заявке получено новое предложение от платёжного агента:<br><br>"
+                            f"<strong>Комиссия:</strong> {percent_fee}%<br>"
+                            f"<strong>Срок:</strong> {duration_workdays} рабочих дней<br><br>"
+                            "Войдите в личный кабинет, чтобы просмотреть все предложения и выбрать лучшее.",
+                            "Открыть заявку",
+                            f"https://poehali.dev/lk/requests/{request_id}"
+                        ))
             conn.commit()
             return resp(200, {"success": True, "offer_id": new_offer_id})
 

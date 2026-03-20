@@ -1,12 +1,12 @@
 {
   "tests": [
     {
-      "name": "Register client",
+      "name": "Login with wrong password",
       "method": "POST",
       "path": "/",
-      "body": {"action": "register_client", "email": "test_lk_client@example.com", "password": "test123", "full_name": "Тест Клиент", "company_name": "ООО Тест", "inn": "1234567890", "phone": "+79001234567"},
-      "expectedStatus": 200,
-      "expectedBody": {"success": true},
+      "body": {"action": "login", "email": "test_lk_client@example.com", "password": "wrongpass_xyz"},
+      "expectedStatus": 401,
+      "expectedBody": {"error": "Неверный email или пароль"},
       "bodyMatcher": "partial"
     },
     {
