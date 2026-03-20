@@ -33,9 +33,14 @@ export default function LkLogin() {
   return (
     <div style={{ minHeight: "100vh", background: "#f8fafc", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 16px" }}>
       <div style={{ width: "100%", maxWidth: 420 }}>
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <div style={{ fontSize: "1.6rem", fontWeight: 800, color: "#1e293b", marginBottom: 6 }}>ВалютаПэй</div>
+        <div style={{ textAlign: "center", marginBottom: 28 }}>
+          <a href="/" style={{ textDecoration: "none" }}>
+            <div style={{ fontSize: "1.6rem", fontWeight: 800, color: "#1e293b", marginBottom: 6 }}>ВалютаПэй</div>
+          </a>
           <div style={{ color: "#64748b", fontSize: "0.9rem" }}>Войдите в личный кабинет</div>
+          <a href="/" style={{ fontSize: "0.75rem", color: "#94a3b8", textDecoration: "none", marginTop: 4, display: "inline-block" }}>
+            ← На главную
+          </a>
         </div>
 
         <div style={{ background: "#fff", borderRadius: 16, padding: "32px 28px", border: "1px solid #e2e8f0", boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }}>
@@ -73,12 +78,33 @@ export default function LkLogin() {
             </button>
           </form>
 
-          <div style={{ textAlign: "center", marginTop: 20, fontSize: "0.85rem", color: "#64748b" }}>
-            Нет аккаунта?{" "}
-            <Link to="/lk/register" style={{ color: "#2563eb", fontWeight: 600, textDecoration: "none" }}>
-              Зарегистрироваться
-            </Link>
+          <div style={{ height: 1, background: "#f1f5f9", margin: "18px 0" }} />
+          <div style={{ textAlign: "center", fontSize: "0.85rem", color: "#64748b", marginBottom: 8 }}>
+            Нет аккаунта?
           </div>
+          <Link to="/lk/register" style={{ textDecoration: "none", display: "block" }}>
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+              padding: "10px 14px", borderRadius: 10,
+              border: "1.5px solid #e2e8f0", background: "#f8fafc",
+              transition: "all 0.15s",
+            }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "#bfdbfe"; (e.currentTarget as HTMLElement).style.background = "#eff6ff"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "#e2e8f0"; (e.currentTarget as HTMLElement).style.background = "#f8fafc"; }}
+            >
+              <div style={{ display: "flex", gap: 6 }}>
+                {["#2563eb", "#7c3aed", "#059669"].map(c => (
+                  <div key={c} style={{ width: 8, height: 8, borderRadius: "50%", background: c }} />
+                ))}
+              </div>
+              <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#374151" }}>
+                Зарегистрироваться
+              </span>
+              <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
+                Клиент · Агент · Партнёр
+              </span>
+            </div>
+          </Link>
         </div>
       </div>
     </div>

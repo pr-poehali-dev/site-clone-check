@@ -404,15 +404,12 @@ export default function Index() {
 
             <div className="flex items-center gap-2">
               <button onClick={() => openSection("contacts")} className="btn-primary hidden sm:flex" style={{ padding: "7px 18px", fontSize: "0.82rem" }}>Консультация</button>
-              <a href="/lk" className="hidden sm:flex" style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 14px", borderRadius: 8, border: "1.5px solid #bfdbfe", background: "#eff6ff", fontFamily: I, fontSize: "0.82rem", fontWeight: 600, color: "#2563eb", cursor: "pointer", textDecoration: "none" }}>
-                <Icon name="HandCoins" size={13} style={{ color: "#2563eb" }} />ЛК агента
-              </a>
-              <button onClick={() => { setShowCabinet(true); setMobileOpen(false); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, border: "1.5px solid #e2e8f0", background: "#fff", fontFamily: I, fontSize: "0.82rem", fontWeight: 500, color: "#374151", cursor: "pointer", position: "relative" }}>
+              {/* Единая кнопка ЛК: открывает старый кабинет ИЛИ ведёт на /lk */}
+              <a href="/lk" className="hidden sm:flex"
+                style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 16px", borderRadius: 8, border: "1.5px solid #e2e8f0", background: "#fff", fontFamily: I, fontSize: "0.82rem", fontWeight: 500, color: "#374151", cursor: "pointer", textDecoration: "none", position: "relative" }}>
                 <Icon name="User" size={14} style={{ color: "#64748b" }} />
-                {isLoggedIn ? "Кабинет" : "Войти"}
-                {unreadCount > 0 && isLoggedIn && <span style={{ position: "absolute", top: -4, right: -4, width: 16, height: 16, borderRadius: "50%", background: "#2563eb", color: "#fff", fontSize: "0.6rem", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{unreadCount}</span>}
-              </button>
+                Личный кабинет
+              </a>
               {isLoggedIn && (
                 <button onClick={handleLogout} title="Выйти из аккаунта"
                   style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, borderRadius: 8, border: "1.5px solid #fecaca", background: "#fff", cursor: "pointer", flexShrink: 0, transition: "all 0.15s" }}
@@ -435,9 +432,9 @@ export default function Index() {
             ))}
             <div className="flex gap-2 mt-4">
               <button onClick={() => openSection("contacts")} className="btn-primary flex-1 justify-center" style={{ padding: "10px 0", fontSize: "0.875rem" }}>Консультация</button>
-              <button onClick={() => { setShowCabinet(true); setMobileOpen(false); window.scrollTo({ top: 0 }); }} className="btn-outline flex-1 justify-center" style={{ padding: "10px 0", fontSize: "0.875rem" }}>
-                <Icon name="User" size={14} />{isLoggedIn ? "Кабинет" : "Войти"}
-              </button>
+              <a href="/lk" onClick={() => setMobileOpen(false)} className="btn-outline flex-1 justify-center" style={{ padding: "10px 0", fontSize: "0.875rem", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                <Icon name="User" size={14} />Личный кабинет
+              </a>
               {isLoggedIn && (
                 <button onClick={() => { handleLogout(); setMobileOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 14px", borderRadius: 8, border: "1.5px solid #fecaca", background: "#fff", fontFamily: I, fontSize: "0.875rem", fontWeight: 500, color: "#ef4444", cursor: "pointer" }}>
                   <Icon name="LogOut" size={14} />Выйти
