@@ -20,6 +20,8 @@ export default function LkLogin() {
       saveUser(data.user);
       if (data.user.lk_role === "AGENT") {
         navigate("/lk/agent/requests");
+      } else if (data.user.lk_role === "ADMIN" || data.user.is_admin) {
+        navigate("/lk/admin");
       } else {
         navigate("/lk/requests");
       }
