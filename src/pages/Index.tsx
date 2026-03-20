@@ -404,6 +404,9 @@ export default function Index() {
 
             <div className="flex items-center gap-2">
               <button onClick={() => openSection("contacts")} className="btn-primary hidden sm:flex" style={{ padding: "7px 18px", fontSize: "0.82rem" }}>Консультация</button>
+              <a href="/lk" className="hidden sm:flex" style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 14px", borderRadius: 8, border: "1.5px solid #bfdbfe", background: "#eff6ff", fontFamily: I, fontSize: "0.82rem", fontWeight: 600, color: "#2563eb", cursor: "pointer", textDecoration: "none" }}>
+                <Icon name="HandCoins" size={13} style={{ color: "#2563eb" }} />ЛК агента
+              </a>
               <button onClick={() => { setShowCabinet(true); setMobileOpen(false); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                 style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, border: "1.5px solid #e2e8f0", background: "#fff", fontFamily: I, fontSize: "0.82rem", fontWeight: 500, color: "#374151", cursor: "pointer", position: "relative" }}>
                 <Icon name="User" size={14} style={{ color: "#64748b" }} />

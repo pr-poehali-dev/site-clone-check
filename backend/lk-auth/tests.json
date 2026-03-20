@@ -1,0 +1,31 @@
+{
+  "tests": [
+    {
+      "name": "Register client",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "register_client", "email": "test_lk_client@example.com", "password": "test123", "full_name": "Тест Клиент", "company_name": "ООО Тест", "inn": "1234567890", "phone": "+79001234567"},
+      "expectedStatus": 200,
+      "expectedBody": {"success": true},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Login client",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "login", "email": "test_lk_client@example.com", "password": "test123"},
+      "expectedStatus": 200,
+      "expectedBody": {"token": "string"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Unknown action",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "unknown"},
+      "expectedStatus": 400,
+      "expectedBody": {"error": "Unknown action"},
+      "bodyMatcher": "partial"
+    }
+  ]
+}

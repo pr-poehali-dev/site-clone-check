@@ -1,4 +1,6 @@
 {
+  "lk-auth": "https://functions.poehali.dev/0436d73e-7867-4894-948e-8713c22a9f08",
+  "lk-requests": "https://functions.poehali.dev/2ae992a7-035d-45e6-a244-bf1581660d49",
   "cabinet-admin": "https://functions.poehali.dev/f758ecae-a645-410a-8cfa-84490d910c0e",
   "cabinet-auth": "https://functions.poehali.dev/7c289e46-e8a8-4c96-99ad-263a6455d72f",
   "cabinet-data": "https://functions.poehali.dev/3aad21f0-3c3d-4a2c-acf4-724687d855f1"
