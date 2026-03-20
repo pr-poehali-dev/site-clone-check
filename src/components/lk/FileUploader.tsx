@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { lkFiles, FileType, UploadedFile } from "@/lib/lkApi";
 import Icon from "@/components/ui/icon";
+import FilePreviewModal from "@/components/lk/FilePreviewModal";
 
 interface FileUploaderProps {
   fileType: FileType;
@@ -44,6 +45,7 @@ export default function FileUploader({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [dragOver, setDragOver] = useState(false);
+  const [previewFile, setPreviewFile] = useState<UploadedFile | null>(null);
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -145,32 +147,69 @@ export default function FileUploader({
               display: "flex", alignItems: "center", gap: 10,
               background: "#fff", border: "1px solid #e2e8f0",
               borderRadius: 8, padding: "8px 12px",
+              transition: "border-color 0.12s",
             }}>
-              {/* Preview / icon */}
-              {isImage(f.mime) ? (
-                <img
-                  src={f.file_url}
-                  alt={f.filename}
-                  style={{ width: 36, height: 36, objectFit: "cover", borderRadius: 6, flexShrink: 0 }}
-                />
-              ) : (
-                <div style={{
-                  width: 36, height: 36, background: "#eff6ff", borderRadius: 6,
-                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                }}>
-                  <Icon name="FileText" size={18} style={{ color: "#2563eb" }} />
-                </div>
-              )}
+              {/* Clickable thumbnail → opens preview */}
+              <div
+                onClick={() => setPreviewFile(f)}
+                title="Нажмите для просмотра"
+                style={{ cursor: "pointer", flexShrink: 0 }}
+              >
+                {isImage(f.mime) ? (
+                  <div style={{ position: "relative", width: 42, height: 42 }}>
+                    <img
+                      src={f.file_url}
+                      alt={f.filename}
+                      style={{ width: 42, height: 42, objectFit: "cover", borderRadius: 6, display: "block" }}
+                    />
+                    <div style={{
+                      position: "absolute", inset: 0, borderRadius: 6,
+                      background: "rgba(0,0,0,0)", display: "flex",
+                      alignItems: "center", justifyContent: "center",
+                      transition: "background 0.12s",
+                    }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(0,0,0,0.35)"; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(0,0,0,0)"; }}
+                    >
+                      <Icon name="Eye" size={14} style={{ color: "#fff", opacity: 0 }} />
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{
+                    width: 42, height: 42, background: "#eff6ff", borderRadius: 6,
+                    display: "flex", flexDirection: "column", alignItems: "center",
+                    justifyContent: "center", gap: 1,
+                    border: "1px solid #bfdbfe",
+                  }}>
+                    <Icon name="FileText" size={16} style={{ color: "#2563eb" }} />
+                    <span style={{ fontSize: "0.55rem", fontWeight: 700, color: "#2563eb", letterSpacing: "0.02em" }}>
+                      {MIME_LABELS[f.mime] || "DOC"}
+                    </span>
+                  </div>
+                )}
+              </div>
 
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{
-                  fontSize: "0.82rem", fontWeight: 600, color: "#1e293b",
-                  whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-                }}>
-                  {f.filename}
-                </div>
-                <div style={{ fontSize: "0.72rem", color: "#94a3b8" }}>
+                <button
+                  onClick={() => setPreviewFile(f)}
+                  style={{
+                    background: "none", border: "none", cursor: "pointer",
+                    padding: 0, textAlign: "left", width: "100%",
+                  }}
+                >
+                  <div style={{
+                    fontSize: "0.82rem", fontWeight: 600, color: "#1e293b",
+                    whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                  }}>
+                    {f.filename}
+                  </div>
+                </button>
+                <div style={{ fontSize: "0.72rem", color: "#94a3b8", marginTop: 1 }}>
                   {MIME_LABELS[f.mime] || f.mime} · {formatSize(f.size)}
+                  <span style={{ marginLeft: 8, color: "#2563eb", cursor: "pointer" }}
+                    onClick={() => setPreviewFile(f)}>
+                    Просмотр
+                  </span>
                 </div>
               </div>
 
@@ -182,9 +221,9 @@ export default function FileUploader({
                   onClick={e => e.stopPropagation()}
                   style={{
                     width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
-                    border: "1px solid #e2e8f0", borderRadius: 6, color: "#2563eb", textDecoration: "none",
+                    border: "1px solid #e2e8f0", borderRadius: 6, color: "#64748b", textDecoration: "none",
                   }}
-                  title="Открыть"
+                  title="Открыть в новой вкладке"
                 >
                   <Icon name="ExternalLink" size={13} />
                 </a>
@@ -206,6 +245,12 @@ export default function FileUploader({
           ))}
         </div>
       )}
+
+      {/* Preview modal */}
+      <FilePreviewModal
+        file={previewFile}
+        onClose={() => setPreviewFile(null)}
+      />
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }

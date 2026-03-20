@@ -4,6 +4,7 @@ import { lkRequests, LkUser, UploadedFile } from "@/lib/lkApi";
 import LkLayout from "@/components/lk/LkLayout";
 import StatusBadge from "@/components/lk/StatusBadge";
 import FileUploader from "@/components/lk/FileUploader";
+import FilePreviewModal from "@/components/lk/FilePreviewModal";
 import Icon from "@/components/ui/icon";
 
 interface Props { user: LkUser; unreadCount?: number; }
@@ -22,6 +23,7 @@ export default function RequestDetail({ user, unreadCount }: Props) {
   const [publishLoading, setPublishLoading] = useState(false);
   const [paymentDocs, setPaymentDocs] = useState<UploadedFile[]>([]);
   const [showPaymentUpload, setShowPaymentUpload] = useState(false);
+  const [previewFile, setPreviewFile] = useState<{ filename: string; file_url: string; mime: string } | null>(null);
 
   const load = async () => {
     if (!id) return;
@@ -340,10 +342,16 @@ export default function RequestDetail({ user, unreadCount }: Props) {
                   </div>
 
                   {o.agent_contract_url && (
-                    <div style={{ marginTop: 8 }}>
+                    <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
+                      <button
+                        onClick={() => setPreviewFile({ filename: "Агентский договор.pdf", file_url: o.agent_contract_url as string, mime: "application/pdf" })}
+                        style={{ fontSize: "0.78rem", color: "#2563eb", background: "none", border: "none", cursor: "pointer", padding: 0, display: "inline-flex", alignItems: "center", gap: 4 }}
+                      >
+                        <Icon name="Eye" size={12} />Просмотреть договор
+                      </button>
                       <a href={o.agent_contract_url as string} target="_blank" rel="noopener noreferrer"
-                        style={{ fontSize: "0.78rem", color: "#2563eb", display: "inline-flex", alignItems: "center", gap: 4 }}>
-                        <Icon name="FileText" size={12} />Агентский договор
+                        style={{ fontSize: "0.78rem", color: "#64748b", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                        <Icon name="Download" size={12} />Скачать
                       </a>
                     </div>
                   )}
@@ -358,20 +366,55 @@ export default function RequestDetail({ user, unreadCount }: Props) {
           <div style={{ marginTop: 20 }}>
             <div style={{ fontSize: "1rem", fontWeight: 700, color: "#1e293b", marginBottom: 10 }}>Документы</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {attachments.map((a: Record<string, unknown>) => (
-                <div key={a.id as string} style={{ display: "flex", alignItems: "center", gap: 10, background: "#fff", borderRadius: 8, border: "1px solid #e2e8f0", padding: "10px 14px" }}>
-                  <Icon name="Paperclip" size={15} style={{ color: "#64748b" }} />
-                  <span style={{ fontSize: "0.85rem", color: "#374151", flex: 1 }}>{a.filename as string}</span>
-                  {a.file_url && (
-                    <a href={a.file_url as string} target="_blank" rel="noopener noreferrer" style={{ color: "#2563eb", fontSize: "0.8rem" }}>
-                      <Icon name="Download" size={14} />
-                    </a>
-                  )}
-                </div>
-              ))}
+              {attachments.map((a: Record<string, unknown>) => {
+                const mime = a.mime as string || "";
+                const isImg = mime.startsWith("image/");
+                const isPdf = mime === "application/pdf";
+                const canPreview = (isImg || isPdf) && a.file_url;
+                return (
+                  <div key={a.id as string} style={{
+                    display: "flex", alignItems: "center", gap: 10,
+                    background: "#fff", borderRadius: 8, border: "1px solid #e2e8f0", padding: "9px 14px",
+                    cursor: canPreview ? "pointer" : "default",
+                    transition: "border-color 0.12s",
+                  }}
+                    onClick={() => canPreview && setPreviewFile({ filename: a.filename as string, file_url: a.file_url as string, mime })}
+                    onMouseEnter={e => canPreview && ((e.currentTarget as HTMLElement).style.borderColor = "#bfdbfe")}
+                    onMouseLeave={e => ((e.currentTarget as HTMLElement).style.borderColor = "#e2e8f0")}
+                  >
+                    {isImg ? (
+                      <img src={a.file_url as string} alt={a.filename as string}
+                        style={{ width: 36, height: 36, objectFit: "cover", borderRadius: 5, flexShrink: 0 }} />
+                    ) : (
+                      <div style={{ width: 36, height: 36, background: "#eff6ff", borderRadius: 5, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 1, flexShrink: 0 }}>
+                        <Icon name="FileText" size={15} style={{ color: "#2563eb" }} />
+                        <span style={{ fontSize: "0.52rem", fontWeight: 700, color: "#2563eb" }}>
+                          {isPdf ? "PDF" : "DOC"}
+                        </span>
+                      </div>
+                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#1e293b", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {a.filename as string}
+                      </div>
+                      {canPreview && <div style={{ fontSize: "0.72rem", color: "#2563eb", marginTop: 1 }}>Нажмите для просмотра</div>}
+                    </div>
+                    {a.file_url && (
+                      <a href={a.file_url as string} download={a.filename as string} target="_blank" rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()}
+                        style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e2e8f0", borderRadius: 6, color: "#64748b", textDecoration: "none", flexShrink: 0 }}>
+                        <Icon name="Download" size={13} />
+                      </a>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
+
+        {/* File preview modal */}
+        <FilePreviewModal file={previewFile} onClose={() => setPreviewFile(null)} />
       </div>
     </LkLayout>
   );
