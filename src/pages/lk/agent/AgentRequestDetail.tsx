@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { lkRequests, lkOffers, LkUser } from "@/lib/lkApi";
+import { lkRequests, lkOffers, LkUser, UploadedFile } from "@/lib/lkApi";
 import LkLayout from "@/components/lk/LkLayout";
 import StatusBadge from "@/components/lk/StatusBadge";
+import FileUploader from "@/components/lk/FileUploader";
 import Icon from "@/components/ui/icon";
 
 interface Props { user: LkUser; unreadCount?: number; }
@@ -29,6 +30,7 @@ export default function AgentRequestDetail({ user, unreadCount }: Props) {
     pay_from_country: "", use_nonresident_route: false,
     comment: "", agent_contract_url: "",
   });
+  const [contractFiles, setContractFiles] = useState<UploadedFile[]>([]);
 
   const load = async () => {
     if (!id) return;
@@ -58,7 +60,7 @@ export default function AgentRequestDetail({ user, unreadCount }: Props) {
         pay_from_country: offerForm.pay_from_country || undefined,
         use_nonresident_route: offerForm.use_nonresident_route,
         comment: offerForm.comment || undefined,
-        agent_contract_url: offerForm.agent_contract_url || undefined,
+        agent_contract_url: contractFiles[0]?.file_url || offerForm.agent_contract_url || undefined,
       });
       setSuccess("Предложение отправлено!");
       setShowOfferForm(false);
@@ -211,9 +213,22 @@ export default function AgentRequestDetail({ user, unreadCount }: Props) {
             </div>
 
             <div style={{ marginBottom: 16 }}>
-              <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "#64748b", display: "block", marginBottom: 4 }}>Ссылка на агентский договор</label>
-              <input value={offerForm.agent_contract_url} onChange={e => setOfferForm(p => ({ ...p, agent_contract_url: e.target.value }))}
-                placeholder="https://..." style={inpStyle} />
+              <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "#64748b", display: "block", marginBottom: 6 }}>Агентский договор</label>
+              <FileUploader
+                fileType="AGENT_CONTRACT"
+                label="Загрузить агентский договор"
+                hint="PDF до 20 МБ"
+                accept=".pdf"
+                uploaded={contractFiles}
+                onUploaded={f => setContractFiles([f])}
+                onDelete={() => setContractFiles([])}
+              />
+              <div style={{ marginTop: 8 }}>
+                <label style={{ fontSize: "0.72rem", color: "#94a3b8", display: "block", marginBottom: 4 }}>или укажите ссылку</label>
+                <input value={offerForm.agent_contract_url}
+                  onChange={e => setOfferForm(p => ({ ...p, agent_contract_url: e.target.value }))}
+                  placeholder="https://..." style={{ ...inpStyle, fontSize: "0.8rem" }} />
+              </div>
             </div>
 
             {error && <div style={{ color: "#dc2626", fontSize: "0.82rem", marginBottom: 10 }}>{error}</div>}

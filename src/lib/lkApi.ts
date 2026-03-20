@@ -159,3 +159,49 @@ export const lkOffers = {
 
   export: () => callData({ action: "offers_export" }),
 };
+
+// ── FILES ─────────────────────────────────────────────────────────────
+export type FileType = "INVOICE" | "DOC" | "AGENT_CONTRACT" | "PAYMENT_PROOF" | "SIGNED_CONTRACT" | "CONTRACT";
+
+export interface UploadedFile {
+  id: string;
+  filename: string;
+  file_url: string;
+  mime: string;
+  size: number;
+  type: FileType;
+}
+
+export const lkFiles = {
+  upload: async (
+    file: File,
+    fileType: FileType,
+    opts?: { request_id?: string; offer_id?: string }
+  ): Promise<UploadedFile> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const b64 = (reader.result as string).split(",")[1];
+          const data = await callData({
+            action: "upload_file",
+            file_b64: b64,
+            filename: file.name,
+            file_type: fileType,
+            request_id: opts?.request_id,
+            offer_id: opts?.offer_id,
+          });
+          if (!data.success) throw new Error(data.error || "Ошибка загрузки");
+          resolve(data.attachment as UploadedFile);
+        } catch (e) {
+          reject(e);
+        }
+      };
+      reader.onerror = () => reject(new Error("Ошибка чтения файла"));
+      reader.readAsDataURL(file);
+    });
+  },
+
+  delete: (attachment_id: string) =>
+    callData({ action: "delete_file", attachment_id }),
+};

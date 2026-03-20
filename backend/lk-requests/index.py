@@ -21,7 +21,7 @@ action=offer_update      { offer_id, ... }
 action=offer_withdraw    { offer_id }
 action=offers_export     — данные для экспорта (ADMIN/OWNER)
 """
-import json, os, psycopg2
+import json, os, psycopg2, boto3, base64, uuid, mimetypes
 from datetime import datetime, timezone, timedelta
 
 
@@ -771,6 +771,150 @@ def handler(event: dict, context) -> dict:
                     "offer_status": r[12], "created_at": str(r[13]),
                 })
             return resp(200, {"export": rows})
+
+        # ═══════════════════════════════════════════════════════════════
+        # FILES SECTION
+        # action=upload_file { file_b64, filename, file_type, request_id?, offer_id? }
+        # action=delete_file { attachment_id }
+        # ═══════════════════════════════════════════════════════════════
+
+        def get_s3():
+            return boto3.client(
+                "s3",
+                endpoint_url="https://bucket.poehali.dev",
+                aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+                aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
+            )
+
+        if action == "upload_file":
+            file_b64 = body.get("file_b64") or ""
+            filename = (body.get("filename") or "file").strip()
+            file_type = body.get("file_type", "DOC")
+            request_id = body.get("request_id")
+            offer_id = body.get("offer_id")
+
+            if not file_b64:
+                return resp(400, {"error": "file_b64 обязателен"})
+
+            # Validate type
+            allowed_types = ("INVOICE", "DOC", "AGENT_CONTRACT", "PAYMENT_PROOF", "SIGNED_CONTRACT", "CONTRACT")
+            if file_type not in allowed_types:
+                return resp(400, {"error": f"Недопустимый тип файла. Допустимые: {', '.join(allowed_types)}"})
+
+            # Decode base64
+            try:
+                # Strip data URI prefix if present
+                if "," in file_b64:
+                    file_b64 = file_b64.split(",", 1)[1]
+                file_bytes = base64.b64decode(file_b64)
+            except Exception:
+                return resp(400, {"error": "Неверный формат файла (ожидается base64)"})
+
+            # Size limit: 20 MB
+            if len(file_bytes) > 20 * 1024 * 1024:
+                return resp(400, {"error": "Файл слишком большой. Максимум 20 МБ"})
+
+            # Detect mime
+            mime_type, _ = mimetypes.guess_type(filename)
+            if not mime_type:
+                mime_type = "application/octet-stream"
+
+            # Only pdf/jpg/png/xlsx allowed
+            allowed_mimes = (
+                "application/pdf",
+                "image/jpeg", "image/jpg", "image/png",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "application/vnd.ms-excel",
+            )
+            if mime_type not in allowed_mimes:
+                return resp(400, {"error": "Допустимые форматы: PDF, JPG, PNG, XLSX"})
+
+            # Verify request/offer ownership
+            if request_id:
+                if role == "CLIENT":
+                    cur.execute("SELECT id FROM lk_requests WHERE id = %s AND created_by_user_id = %s",
+                                (request_id, user["id"]))
+                else:
+                    cur.execute("SELECT id FROM lk_requests WHERE id = %s", (request_id,))
+                if not cur.fetchone():
+                    return resp(403, {"error": "Нет доступа к заявке"})
+
+            if offer_id:
+                org_id, _ = get_agent_org(cur, user["id"])
+                cur.execute("SELECT id FROM lk_offers WHERE id = %s AND org_id = %s",
+                            (offer_id, org_id))
+                if not cur.fetchone():
+                    return resp(403, {"error": "Нет доступа к предложению"})
+
+            # Upload to S3
+            file_id = str(uuid.uuid4())
+            ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else "bin"
+            storage_key = f"lk/{file_type.lower()}/{file_id}.{ext}"
+
+            try:
+                s3 = get_s3()
+                s3.put_object(
+                    Bucket="files",
+                    Key=storage_key,
+                    Body=file_bytes,
+                    ContentType=mime_type,
+                    ContentDisposition=f'inline; filename="{filename}"',
+                )
+            except Exception as e:
+                return resp(500, {"error": f"Ошибка загрузки файла: {str(e)}"})
+
+            cdn_url = f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{storage_key}"
+
+            # Save to DB
+            org_id_val = None
+            if role == "AGENT":
+                org_id_val, _ = get_agent_org(cur, user["id"])
+
+            cur.execute(
+                """INSERT INTO lk_attachments
+                   (id, owner_user_id, org_id, request_id, offer_id, type, filename, mime, size, storage_key, file_url)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                (file_id, user["id"], org_id_val, request_id, offer_id,
+                 file_type, filename, mime_type, len(file_bytes),
+                 storage_key, cdn_url),
+            )
+            conn.commit()
+
+            return resp(200, {
+                "success": True,
+                "attachment": {
+                    "id": file_id,
+                    "filename": filename,
+                    "file_url": cdn_url,
+                    "mime": mime_type,
+                    "size": len(file_bytes),
+                    "type": file_type,
+                }
+            })
+
+        if action == "delete_file":
+            attachment_id = body.get("attachment_id")
+            cur.execute(
+                "SELECT storage_key, owner_user_id FROM lk_attachments WHERE id = %s",
+                (attachment_id,),
+            )
+            row = cur.fetchone()
+            if not row:
+                return resp(404, {"error": "Файл не найден"})
+            if row[1] != user["id"]:
+                return resp(403, {"error": "Нет доступа"})
+
+            # Delete from S3
+            try:
+                s3 = get_s3()
+                s3.delete_object(Bucket="files", Key=row[0])
+            except Exception:
+                pass  # не критично если не удалось
+
+            cur.execute("UPDATE lk_attachments SET storage_key=NULL, file_url=NULL WHERE id=%s",
+                        (attachment_id,))
+            conn.commit()
+            return resp(200, {"success": True})
 
         return resp(400, {"error": "Unknown action"})
 

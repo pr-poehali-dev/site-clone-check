@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { lkRequests, lkCompanies, LkUser } from "@/lib/lkApi";
+import { lkRequests, lkCompanies, LkUser, UploadedFile } from "@/lib/lkApi";
 import LkLayout from "@/components/lk/LkLayout";
+import FileUploader from "@/components/lk/FileUploader";
 import Icon from "@/components/ui/icon";
 
 interface Props { user: LkUser; unreadCount?: number; }
@@ -23,6 +24,7 @@ export default function NewRequest({ user, unreadCount }: Props) {
   const [inv, setInv] = useState({ amount: "", currency: "USD", invoice_number: "", invoice_date: "", description: "" });
   const [publishNow, setPublishNow] = useState(true);
   const [offersUntil, setOffersUntil] = useState("");
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
 
   useEffect(() => {
     lkCompanies.list().then(d => setCompanies(d.companies || [])).catch(() => {});
@@ -200,22 +202,52 @@ export default function NewRequest({ user, unreadCount }: Props) {
                     placeholder={ph} style={inpStyle} />
                 </div>
               ))}
-              <div>
+              <div style={{ marginBottom: 14 }}>
                 <label style={{ fontSize: "0.78rem", fontWeight: 600, color: "#64748b", display: "block", marginBottom: 5 }}>Описание</label>
                 <textarea value={inv.description} onChange={e => setInv(p => ({ ...p, description: e.target.value }))}
                   placeholder="Оплата инвойса за поставку товаров..." rows={3}
                   style={{ ...inpStyle, resize: "vertical" as const }} />
               </div>
+
             </div>
           )}
 
-          {/* Step 2: Publish */}
+          {/* Step 2: Files + Publish */}
           {step === 2 && requestId && (
             <div>
               <div style={{ background: "#d1fae5", borderRadius: 10, padding: "14px 16px", marginBottom: 20 }}>
                 <div style={{ fontWeight: 700, color: "#059669", marginBottom: 4 }}>✓ Заявка создана</div>
-                <div style={{ fontSize: "0.85rem", color: "#065f46" }}>Теперь вы можете опубликовать её, чтобы агенты могли отправлять предложения.</div>
+                <div style={{ fontSize: "0.85rem", color: "#065f46" }}>Прикрепите инвойс и опубликуйте заявку, чтобы агенты отправляли предложения.</div>
               </div>
+
+              {/* File uploads */}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "#374151", marginBottom: 10 }}>Документы</div>
+                <FileUploader
+                  fileType="INVOICE"
+                  label="Загрузить инвойс"
+                  hint="PDF, JPG, PNG до 20 МБ"
+                  requestId={requestId}
+                  multiple
+                  uploaded={uploadedFiles.filter(f => f.type === "INVOICE")}
+                  onUploaded={f => setUploadedFiles(p => [...p, f])}
+                  onDelete={id => setUploadedFiles(p => p.filter(x => x.id !== id))}
+                />
+                <div style={{ marginTop: 10 }}>
+                  <FileUploader
+                    fileType="DOC"
+                    label="Дополнительные документы"
+                    hint="PDF, JPG, PNG до 20 МБ"
+                    requestId={requestId}
+                    multiple
+                    uploaded={uploadedFiles.filter(f => f.type === "DOC")}
+                    onUploaded={f => setUploadedFiles(p => [...p, f])}
+                    onDelete={id => setUploadedFiles(p => p.filter(x => x.id !== id))}
+                  />
+                </div>
+              </div>
+
+              <div style={{ height: 1, background: "#f1f5f9", marginBottom: 16 }} />
 
               <div style={{ marginBottom: 16 }}>
                 <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>

@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { lkRequests, LkUser } from "@/lib/lkApi";
+import { lkRequests, LkUser, UploadedFile } from "@/lib/lkApi";
 import LkLayout from "@/components/lk/LkLayout";
 import StatusBadge from "@/components/lk/StatusBadge";
+import FileUploader from "@/components/lk/FileUploader";
 import Icon from "@/components/ui/icon";
 
 interface Props { user: LkUser; unreadCount?: number; }
@@ -19,6 +20,8 @@ export default function RequestDetail({ user, unreadCount }: Props) {
   const [success, setSuccess] = useState("");
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [publishLoading, setPublishLoading] = useState(false);
+  const [paymentDocs, setPaymentDocs] = useState<UploadedFile[]>([]);
+  const [showPaymentUpload, setShowPaymentUpload] = useState(false);
 
   const load = async () => {
     if (!id) return;
@@ -134,12 +137,12 @@ export default function RequestDetail({ user, unreadCount }: Props) {
             </button>
           )}
           {request.can_mark_paid && (
-            <button onClick={handleMarkPaid} disabled={actionLoading} style={{
+            <button onClick={() => setShowPaymentUpload(true)} style={{
               display: "flex", alignItems: "center", gap: 7, padding: "9px 16px",
               background: "#059669", color: "#fff", borderRadius: 8, border: "none",
               cursor: "pointer", fontWeight: 600, fontSize: "0.875rem",
             }}>
-              <Icon name="CheckCircle" size={15} />{actionLoading ? "Обновление..." : "Отметить оплаченным"}
+              <Icon name="CheckCircle" size={15} />Подтвердить оплату
             </button>
           )}
           {request.can_cancel && (
@@ -152,6 +155,53 @@ export default function RequestDetail({ user, unreadCount }: Props) {
             </button>
           )}
         </div>
+
+        {/* Payment confirmation panel */}
+        {showPaymentUpload && request.can_mark_paid && (
+          <div style={{ background: "#f0fdf4", border: "1.5px solid #86efac", borderRadius: 12, padding: "18px 20px", marginBottom: 16 }}>
+            <div style={{ fontWeight: 700, color: "#059669", fontSize: "0.95rem", marginBottom: 4 }}>Подтверждение оплаты</div>
+            <div style={{ fontSize: "0.82rem", color: "#065f46", marginBottom: 14 }}>
+              Прикрепите платёжные документы (подтверждение оплаты, зеркальный инвойс, подписанный договор).
+            </div>
+            <FileUploader
+              fileType="PAYMENT_PROOF"
+              label="Загрузить подтверждение оплаты"
+              hint="PDF, JPG, PNG до 20 МБ"
+              requestId={id}
+              multiple
+              uploaded={paymentDocs.filter(f => f.type === "PAYMENT_PROOF")}
+              onUploaded={f => setPaymentDocs(p => [...p, f])}
+              onDelete={docId => setPaymentDocs(p => p.filter(x => x.id !== docId))}
+            />
+            <div style={{ marginTop: 10 }}>
+              <FileUploader
+                fileType="SIGNED_CONTRACT"
+                label="Подписанный договор (опционально)"
+                hint="PDF до 20 МБ"
+                requestId={id}
+                multiple
+                uploaded={paymentDocs.filter(f => f.type === "SIGNED_CONTRACT")}
+                onUploaded={f => setPaymentDocs(p => [...p, f])}
+                onDelete={docId => setPaymentDocs(p => p.filter(x => x.id !== docId))}
+              />
+            </div>
+            <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
+              <button onClick={handleMarkPaid} disabled={actionLoading} style={{
+                padding: "9px 20px", background: actionLoading ? "#94a3b8" : "#059669",
+                color: "#fff", borderRadius: 8, border: "none", cursor: "pointer",
+                fontWeight: 700, fontSize: "0.875rem",
+              }}>
+                {actionLoading ? "Обновление..." : "✓ Подтвердить оплату"}
+              </button>
+              <button onClick={() => setShowPaymentUpload(false)} style={{
+                padding: "9px 14px", background: "none", border: "1px solid #e2e8f0",
+                borderRadius: 8, cursor: "pointer", color: "#64748b", fontSize: "0.875rem",
+              }}>
+                Отмена
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Cancel confirm */}
         {showCancelConfirm && (
