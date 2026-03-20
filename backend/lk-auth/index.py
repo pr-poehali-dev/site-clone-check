@@ -257,6 +257,54 @@ def handler(event: dict, context) -> dict:
                          "lk_role": lk_role},
             })
 
+        # ── CREATE DEMO USERS ────────────────────────────────────────────
+        if action == "create_demo_users":
+            demo_password = hp("Demo1234!")
+            demo_admin_password = hp("Admin1234!")
+            created = []
+            # Клиент
+            cur.execute("SELECT id FROM cabinet_users WHERE email = 'demo-client@demo.ru'")
+            if not cur.fetchone():
+                cur.execute(
+                    """INSERT INTO cabinet_users (email, password_hash, contact_name, company, inn, phone, lk_role, is_verified, is_active)
+                       VALUES ('demo-client@demo.ru',%s,'Демо Клиент','ООО Демо Клиент','7700000001','+79000000001','CLIENT',TRUE,TRUE) RETURNING id""",
+                    (demo_password,)
+                )
+                new_id = cur.fetchone()[0]
+                cur.execute(
+                    """INSERT INTO lk_companies (name, inn, client_owner_user_id, contacts)
+                       VALUES ('ООО Демо Клиент','7700000001',%s,'{}')""", (new_id,)
+                )
+                created.append("client")
+            # Агент
+            cur.execute("SELECT id FROM cabinet_users WHERE email = 'demo-agent@demo.ru'")
+            if not cur.fetchone():
+                cur.execute(
+                    """INSERT INTO cabinet_users (email, password_hash, contact_name, company, inn, phone, lk_role, is_verified, is_active)
+                       VALUES ('demo-agent@demo.ru',%s,'Демо Агент','ООО Демо Агент','7700000002','+79000000002','AGENT',TRUE,TRUE) RETURNING id""",
+                    (demo_password,)
+                )
+                new_id = cur.fetchone()[0]
+                cur.execute(
+                    """INSERT INTO lk_organizations (type, name, inn, kpp, address, owner_user_id)
+                       VALUES ('AGENT','ООО Демо Агент','7700000002','770001001','г. Москва, ул. Демо, 1',%s) RETURNING id""",
+                    (new_id,)
+                )
+                org_id = cur.fetchone()[0]
+                cur.execute("INSERT INTO lk_org_memberships (user_id, org_id, role) VALUES (%s,%s,'OWNER')", (new_id, org_id))
+                created.append("agent")
+            # Админ
+            cur.execute("SELECT id FROM cabinet_users WHERE email = 'demo-admin@demo.ru'")
+            if not cur.fetchone():
+                cur.execute(
+                    """INSERT INTO cabinet_users (email, password_hash, contact_name, company, inn, phone, lk_role, is_verified, is_active, is_admin)
+                       VALUES ('demo-admin@demo.ru',%s,'Демо Админ','ВалютаПэй','7700000099','+79000000099','CLIENT',TRUE,TRUE,TRUE) RETURNING id""",
+                    (demo_admin_password,)
+                )
+                created.append("admin")
+            conn.commit()
+            return resp(200, {"success": True, "created": created, "already_existed": [r for r in ["client","agent","admin"] if r not in created]})
+
         # ── ME ───────────────────────────────────────────────────────────
         if action == "me":
             user = user_by_token(cur, token)
