@@ -15,6 +15,18 @@ import AgentOffers from "./agent/AgentOffers";
 import AgentOrg from "./agent/AgentOrg";
 import LkNotifications from "./LkNotifications";
 import LkProfile from "./LkProfile";
+import AdminLayout from "@/pages/admin/AdminLayout";
+import AdminOverview from "@/pages/admin/AdminOverview";
+import AdminUsers from "@/pages/admin/AdminUsers";
+import AdminOrgs from "@/pages/admin/AdminOrgs";
+import AdminCompanies from "@/pages/admin/AdminCompanies";
+import AdminRequests from "@/pages/admin/AdminRequests";
+import AdminOffers from "@/pages/admin/AdminOffers";
+import AdminFiles from "@/pages/admin/AdminFiles";
+import AdminDicts from "@/pages/admin/AdminDicts";
+import AdminAudit from "@/pages/admin/AdminAudit";
+import AdminSettings from "@/pages/admin/AdminSettings";
+import AdminReports from "@/pages/admin/AdminReports";
 
 function RequireAuth({ user, checked, children }: { user: LkUser | null; checked: boolean; children: React.ReactNode }) {
   const navigate = useNavigate();
@@ -113,11 +125,30 @@ export default function LkRouter() {
         </RequireAuth>
       } />
 
+      {/* Admin routes */}
+      <Route path="admin" element={
+        <RequireAuth user={user} checked={checked}>
+          <AdminLayout />
+        </RequireAuth>
+      }>
+        <Route index element={<AdminOverview />} />
+        <Route path="users" element={<AdminUsers />} />
+        <Route path="orgs" element={<AdminOrgs />} />
+        <Route path="companies" element={<AdminCompanies />} />
+        <Route path="requests" element={<AdminRequests />} />
+        <Route path="offers" element={<AdminOffers />} />
+        <Route path="files" element={<AdminFiles />} />
+        <Route path="dicts" element={<AdminDicts />} />
+        <Route path="reports" element={<AdminReports />} />
+        <Route path="audit" element={<AdminAudit />} />
+        <Route path="settings" element={<AdminSettings />} />
+      </Route>
+
       {/* Default redirect */}
       <Route path="*" element={
         checked ? (
           user ? (
-            <Navigate to={user.lk_role === "AGENT" ? "/lk/agent/requests" : "/lk/requests"} replace />
+            <Navigate to={user.lk_role === "AGENT" ? "/lk/agent/requests" : (["ADMIN", "PLATFORM_ADMIN"].includes(user.lk_role) || user.is_admin) ? "/lk/admin" : "/lk/requests"} replace />
           ) : (
             <Navigate to="/lk/login" replace />
           )
