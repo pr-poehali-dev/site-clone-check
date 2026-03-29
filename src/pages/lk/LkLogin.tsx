@@ -37,7 +37,7 @@ export default function LkLogin() {
       <div style={{ width: "100%", maxWidth: 420 }}>
         <div style={{ textAlign: "center", marginBottom: 28 }}>
           <a href="/" style={{ textDecoration: "none" }}>
-            <div style={{ fontSize: "1.6rem", fontWeight: 800, color: "#1e293b", marginBottom: 6 }}>ВалютаПэй</div>
+            <div style={{ fontSize: "1.6rem", fontWeight: 800, color: "#1e293b", marginBottom: 6 }}>Вэд Агент Сервис</div>
           </a>
           <div style={{ color: "#64748b", fontSize: "0.9rem" }}>Войдите в личный кабинет</div>
           <a href="/" style={{ fontSize: "0.75rem", color: "#94a3b8", textDecoration: "none", marginTop: 4, display: "inline-block" }}>
