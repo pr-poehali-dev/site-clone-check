@@ -140,7 +140,7 @@ export default function LkRegister() {
         {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: 28 }}>
           <a href="/" style={{ textDecoration: "none" }}>
-            <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#1e293b", marginBottom: 4 }}>ВалютаПэй</div>
+            <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#1e293b", marginBottom: 4 }}>Вэд Агент Сервис</div>
           </a>
           <div style={{ color: "#64748b", fontSize: "0.9rem" }}>
             {step === "role" ? "Выберите тип аккаунта" : "Заполните данные для регистрации"}
